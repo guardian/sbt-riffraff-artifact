@@ -30,7 +30,7 @@ object RiffRaffArtifact extends AutoPlugin {
           s"packages/${riffRaffPackageName.value}/${riffRaffPackageName.value}.conf",
         riffRaffPackageType.value ->
           s"packages/${riffRaffPackageName.value}/${riffRaffPackageType.value.getName}",
-        baseDirectory.value / "conf" / "deploy.json" ->
+        (resourceDirectory in Compile).value / "deploy.json" ->
           "deploy.json"
       ),
 

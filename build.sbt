@@ -2,7 +2,7 @@ import bintray.Keys._
 
 name := "riffraff-artifact"
 
-version := "0.1"
+version := "0.2"
 
 organization := "com.gu"
 
