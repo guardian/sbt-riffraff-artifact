@@ -1,10 +1,11 @@
 import bintray.Keys._
+import com.typesafe.sbt.SbtGit._
 
 name := "riffraff-artifact"
 
-version := "0.2-SNAPSHOT"
-
 organization := "com.gu"
+
+versionWithGit
 
 sbtPlugin := true
 
