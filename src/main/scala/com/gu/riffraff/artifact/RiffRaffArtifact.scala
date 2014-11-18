@@ -5,8 +5,6 @@ import sbt.Keys._
 
 object RiffRaffArtifact extends AutoPlugin {
 
-  override def trigger = allRequirements
-
   import autoImport._
 
   override def projectSettings = defaultSettings

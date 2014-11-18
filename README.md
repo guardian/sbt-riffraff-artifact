@@ -13,6 +13,8 @@ to your `project/plugins.sbt` and if you want to bundle your app as a `tgz` usin
 import com.typesafe.sbt.packager.Keys._
 
 riffRaffPackageType := (packageZipTarball in config("universal")).value
+
+lazy val root = (project in file(".")).enablePlugins(RiffRaffArtifact)
 ```
 
 to your build.sbt, then run `riffRaffArtifact` to build an artifact deployable by
@@ -38,6 +40,8 @@ If you want a `zip` rather than a `tgz` built, instead add
 import com.typesafe.sbt.packager.Keys._
 
 riffRaffPackageType := (dist in config("universal")).value
+
+lazy val root = (project in file(".")).enablePlugins(RiffRaffArtifact)
 ```
 to your build.sbt. If you prefer bundling your app as an uber-jar, instead include the 
 [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin and add
@@ -46,4 +50,6 @@ to your build.sbt. If you prefer bundling your app as an uber-jar, instead inclu
 import sbtassembly.Plugin.AssemblyKeys._
 
 riffRaffPackageType := assembly.value
+
+lazy val root = (project in file(".")).enablePlugins(RiffRaffArtifact)
 ```
