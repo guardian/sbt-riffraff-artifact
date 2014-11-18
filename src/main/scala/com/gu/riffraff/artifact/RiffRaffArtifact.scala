@@ -1,6 +1,5 @@
 package com.gu.riffraff.artifact
 
-import com.typesafe.sbt.packager.Keys._
 import sbt._
 import sbt.Keys._
 
@@ -23,7 +22,6 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val defaultSettings = Seq(
       riffRaffArtifactFile := "artifacts.zip",
       riffRaffPackageName := name.value,
-      riffRaffPackageType := (packageZipTarball in config("universal")).value,
 
       riffRaffArtifactResources := Seq(
         baseDirectory.value / s"${riffRaffPackageName.value}.conf" ->
