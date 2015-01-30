@@ -35,15 +35,28 @@ packages/example/example.tgz
 packages/example/example.conf
 ```
 
-If you want a `zip` rather than a `tgz` built, instead add
+If you want a `zip` rather than a `tgz` built, instead add the following to your `build.sbt`.
+
 ```
 import com.typesafe.sbt.packager.Keys._
+```
+for sbt-native-packager 0.8.0, OR
+```
+enablePlugins(SbtNativePackager)
 
+enablePlugins(JavaAppPackaging)
+```
+for sbt-native-packager 1.0.0,
+
+followed by
+
+```
 riffRaffPackageType := (dist in config("universal")).value
 
 lazy val root = (project in file(".")).enablePlugins(RiffRaffArtifact)
 ```
-to your build.sbt. If you prefer bundling your app as an uber-jar, instead include the 
+
+If you prefer bundling your app as an uber-jar, instead include the
 [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin and add
 
 ```
