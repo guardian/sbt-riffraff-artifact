@@ -3,7 +3,7 @@ SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployabl
 
 Add
 ```
-addSbtPlugin("com.gu" % "riffraff-artifact" % "0.5")
+addSbtPlugin("com.gu" % "riffraff-artifact" % "0.6")
 ```
 
 to your `project/plugins.sbt` and if you want to bundle your app as a `tgz` using 
