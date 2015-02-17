@@ -14,6 +14,7 @@ object RiffRaffArtifact extends AutoPlugin {
 
     lazy val riffRaffPackageType = taskKey[File]("The package to build to then wrap for RiffRaff")
     lazy val riffRaffArtifactResources = taskKey[Seq[(File, String)]]("Files that will be collected by the deployment-artifact task")
+    lazy val riffRaffArtifactDirectory = settingKey[String]("Directory within target directory to write the artifact")
     lazy val riffRaffArtifactFile = settingKey[String]("Filename of the artifact built by deployment-artifact")
     lazy val riffRaffPackageName = settingKey[String]("Name of the magenta package")
     lazy val riffRaffArtifactPublishPath = settingKey[String]("Path to tell TeamCity to publish the artifact on")
@@ -22,6 +23,7 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffArtifactFile := "artifacts.zip",
       riffRaffPackageName := name.value,
       riffRaffArtifactPublishPath := ".",
+      riffRaffArtifactDirectory := "riffraff",
 
       riffRaffArtifactResources := Seq(
         // upstart script
@@ -41,7 +43,7 @@ object RiffRaffArtifact extends AutoPlugin {
       ),
 
       riffRaffArtifact := {
-        val distFile = target.value / riffRaffArtifactFile.value
+        val distFile = target.value / riffRaffArtifactDirectory.value / riffRaffArtifactFile.value
         streams.value.log.info(s"Creating RiffRaff artifact $distFile")
 
         createArchive(riffRaffArtifactResources.value, distFile)
