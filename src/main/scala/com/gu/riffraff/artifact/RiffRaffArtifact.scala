@@ -26,6 +26,10 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffArtifactDirectory := "riffraff",
 
       riffRaffArtifactResources := Seq(
+        // systemd unit
+        baseDirectory.value / s"${riffRaffPackageName.value}.service" ->
+          s"packages/${riffRaffPackageName.value}/${riffRaffPackageName.value}.service",
+
         // upstart script
         baseDirectory.value / s"${riffRaffPackageName.value}.conf" ->
           s"packages/${riffRaffPackageName.value}/${riffRaffPackageName.value}.conf",
