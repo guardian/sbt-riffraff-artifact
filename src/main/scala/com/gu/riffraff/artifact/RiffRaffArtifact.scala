@@ -1,7 +1,13 @@
 package com.gu.riffraff.artifact
 
+import com.amazonaws.services.s3.AmazonS3Client
+import com.typesafe.sbt.SbtGit.git
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder
+import org.joda.time.{DateTimeZone, DateTime}
 import sbt._
 import sbt.Keys._
+import upickle.default._
+import upickle.Js
 
 object RiffRaffArtifact extends AutoPlugin {
 
@@ -19,11 +25,33 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffPackageName = settingKey[String]("Name of the magenta package")
     lazy val riffRaffArtifactPublishPath = settingKey[String]("Path to tell TeamCity to publish the artifact on")
 
+    lazy val riffRaffManifest = taskKey[File]("Creates a file representing a build for RiffRaff to consume")
+
+    lazy val riffRaffManifestFile = settingKey[String]("Filename of the build manifest for RiffRaff")
+    lazy val riffRaffManifestProjectName = settingKey[String]("Project name for the manifest RiffRaff uses to describe a build")
+    lazy val riffRaffBuildIdentifier = settingKey[String]("Identifier for a particular build of a project")
+    lazy val riffRaffManifestBuildStartTime = taskKey[DateTime]("When the build of this artifact started")
+    lazy val riffRaffManifestRevision = taskKey[String]("Revision of the repository the artifact was built from")
+    lazy val riffRaffManifestVcsUrl = taskKey[String]("URL of the repository the artifact was built from")
+    lazy val riffRaffManifestBranch = taskKey[String]("Branch of the repository the artifact was built from")
+
+    lazy val riffRaffUpload = taskKey[Unit]("Upload artifact and manifest to S3 buckets")
+    lazy val riffRaffUploadArtifactBucket = settingKey[String]("Bucket to upload artifacts to")
+    lazy val riffRaffUploadManifestBucket = settingKey[String]("Bucket to upload manifest to")
+
     lazy val defaultSettings = Seq(
       riffRaffArtifactFile := "artifacts.zip",
       riffRaffPackageName := name.value,
+      riffRaffManifestProjectName := name.value,
       riffRaffArtifactPublishPath := ".",
       riffRaffArtifactDirectory := "riffraff",
+
+      riffRaffManifestFile := "build.json",
+      riffRaffManifestBuildStartTime := DateTime.now(),
+      riffRaffManifestRevision := git.gitHeadCommit.value.getOrElse("Unknown"),
+      riffRaffManifestVcsUrl :=
+        new FileRepositoryBuilder().findGitDir(baseDirectory.value).build.getConfig.getString("remote", "origin", "url"),
+      riffRaffManifestBranch := git.gitCurrentBranch.value,
 
       riffRaffArtifactResources := Seq(
         // systemd unit
@@ -46,6 +74,23 @@ object RiffRaffArtifact extends AutoPlugin {
 
       ),
 
+      riffRaffManifest := {
+        implicit val dateTimeWriter = Writer[DateTime](dt => Js.Str(dt.withZone(DateTimeZone.UTC).toString))
+        val manifestString = write(BuildManifest(
+          riffRaffManifestProjectName.value,
+          riffRaffBuildIdentifier.value,
+          riffRaffManifestBuildStartTime.value,
+          riffRaffManifestRevision.value,
+          riffRaffManifestVcsUrl.value,
+          riffRaffManifestBranch.value
+        ))
+        val manifestFile = target.value / riffRaffArtifactDirectory.value / riffRaffManifestFile.value
+        IO.write(manifestFile, manifestString)
+        streams.value.log.info(s"Created RiffRaff manifest: ${manifestFile.getPath}")
+
+        manifestFile
+      },
+
       riffRaffArtifact := {
         val distFile = target.value / riffRaffArtifactDirectory.value / riffRaffArtifactFile.value
         streams.value.log.info(s"Creating RiffRaff artifact $distFile")
@@ -59,6 +104,18 @@ object RiffRaffArtifact extends AutoPlugin {
 
         streams.value.log.info("RiffRaff artifact created")
         distFile
+      },
+
+      riffRaffUpload := {
+        val client = new AmazonS3Client()
+        client.putObject(riffRaffUploadManifestBucket.value,
+          s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${riffRaffManifest.value.getName}",
+          riffRaffManifest.value)
+        streams.value.log.info("RiffRaff build manifest uploaded")
+        client.putObject(riffRaffUploadArtifactBucket.value,
+          s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${riffRaffArtifact.value.getName}",
+          riffRaffArtifact.value)
+        streams.value.log.info("RiffRaff build artifact    uploaded")
       }
     )
   }
@@ -69,4 +126,13 @@ object RiffRaffArtifact extends AutoPlugin {
     }
     IO.zip(filesToInclude, archiveToCreate)
   }
+
+  case class BuildManifest(
+    projectName: String,
+    buildNumber: String,
+    startTime: DateTime,
+    revision: String,
+    vcsURL: String,
+    branch: String
+  )
 }
