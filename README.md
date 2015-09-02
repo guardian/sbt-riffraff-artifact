@@ -3,22 +3,30 @@ SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployabl
 
 Add
 ```
-addSbtPlugin("com.gu" % "riffraff-artifact" % "0.6.1")
+addSbtPlugin("com.gu" % "riffraff-artifact" % "0.7.0")
 ```
 
 to your `project/plugins.sbt` and if you want to bundle your app as a `tgz` using 
-[sbt-native-packager](https://github.com/sbt/sbt-native-packager)
+[sbt-native-packager](https://github.com/sbt/sbt-native-packager) 
 
 ```
-import com.typesafe.sbt.packager.Keys._
+enablePlugins(RiffRaffArtifact, UniversalPlugin)
 
-riffRaffPackageType := (packageZipTarball in config("universal")).value
+riffRaffPackageType := (packageZipTarball in Universal).value
 
-lazy val root = (project in file(".")).enablePlugins(RiffRaffArtifact)
+riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
+riffRaffUploadArtifactBucket := "riffraff-artifact"
+riffRaffUploadManifestBucket := "riffraff-builds"
 ```
 
-to your build.sbt, then run `riffRaffArtifact` to build an artifact deployable by
-[RiffRaff](https://github.com/guardian/deploy).
+to your build.sbt, then run `riffRaffUpload` to build an artifact deployable by
+[RiffRaff](https://github.com/guardian/deploy) and upload it to the S3 bukets used
+by the Guardian's RiffRaff installation, along with JSON description of the build. 
+
+In order to have the plugin upload to S3, you will also need to have credentials that
+can upload to those buckets resolvable by the [DefaultAWSCredentialsProviderChain](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html). Commonly this would be via AWS_ACCESS_KEY_ID and 
+AWS_SECRET_ACCESS_KEY environment variables. Travis has [instructions](http://docs.travis-ci.com/user/environment-variables/#Encrypting-Variables-Using-a-Public-Key) 
+on how to encrypt these variables.
 
 Customisation
 -------------
@@ -35,21 +43,32 @@ packages/example/example.tgz
 packages/example/example.service
 ```
 
-If you want a `zip` rather than a `tgz` built, instead add
+If you want a `deb` rather than a `tgz` built, instead add
 ```
-import com.typesafe.sbt.packager.Keys._
+enablePlugins(RiffRaffArtifact, JDebPackaging)
 
-riffRaffPackageType := (dist in config("universal")).value
+import com.typesafe.sbt.packager.archetypes.ServerLoader.Systemd
+serverLoading in Debian := Systemd
+debianPackageDependencies := Seq("openjdk-8-jre-headless")
+maintainer := "The Maintainer <the.maintainer@company.com>"
+packageSummary := "Brief description"
+packageDescription := """Slightly longer description"""
 
-lazy val root = (project in file(".")).enablePlugins(RiffRaffArtifact)
+riffRaffPackageType := (packageBin in Debian).value
+
+riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
+riffRaffUploadArtifactBucket := "riffraff-artifact"
+riffRaffUploadManifestBucket := "riffraff-builds"
 ```
 to your build.sbt. If you prefer bundling your app as an uber-jar, instead include the 
 [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin and add
 
 ```
-import sbtassembly.Plugin.AssemblyKeys._
+enablePlugins(RiffRaffArtifact)
 
 riffRaffPackageType := assembly.value
 
-lazy val root = (project in file(".")).enablePlugins(RiffRaffArtifact)
+riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
+riffRaffUploadArtifactBucket := "riffraff-artifact"
+riffRaffUploadManifestBucket := "riffraff-builds"
 ```
