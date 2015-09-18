@@ -36,8 +36,8 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffManifestBranch = taskKey[String]("Branch of the repository the artifact was built from")
 
     lazy val riffRaffUpload = taskKey[Unit]("Upload artifact and manifest to S3 buckets")
-    lazy val riffRaffUploadArtifactBucket = settingKey[String]("Bucket to upload artifacts to")
-    lazy val riffRaffUploadManifestBucket = settingKey[String]("Bucket to upload manifest to")
+    lazy val riffRaffUploadArtifactBucket = settingKey[Option[String]]("Bucket to upload artifacts to")
+    lazy val riffRaffUploadManifestBucket = settingKey[Option[String]]("Bucket to upload manifest to")
 
     lazy val defaultSettings = Seq(
       riffRaffArtifactFile := "artifacts.zip",
@@ -48,10 +48,14 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffManifestFile := "build.json",
       riffRaffManifestBuildStartTime := DateTime.now(),
+      riffRaffBuildIdentifier := "unknown",
       riffRaffManifestRevision := git.gitHeadCommit.value.getOrElse("Unknown"),
       riffRaffManifestVcsUrl :=
         new FileRepositoryBuilder().findGitDir(baseDirectory.value).build.getConfig.getString("remote", "origin", "url"),
       riffRaffManifestBranch := git.gitCurrentBranch.value,
+
+      riffRaffUploadArtifactBucket := None,
+      riffRaffUploadManifestBucket := None,
 
       riffRaffArtifactResources := Seq(
         // systemd unit
@@ -67,11 +71,8 @@ object RiffRaffArtifact extends AutoPlugin {
           s"packages/${riffRaffPackageName.value}/${riffRaffPackageType.value.getName}",
 
         // deploy instructions
-         // "traditional" location
-         (resourceDirectory in Compile).value / "deploy.json" -> "deploy.json",
-         // a more logical location
-         baseDirectory.value / "deploy.json" -> "deploy.json"
-
+        (resourceDirectory in Compile).value / "deploy.json" -> "deploy.json",
+        baseDirectory.value / "deploy.json" -> "deploy.json"
       ),
 
       riffRaffManifest := {
@@ -108,14 +109,35 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffUpload := {
         val client = new AmazonS3Client()
-        client.putObject(riffRaffUploadManifestBucket.value,
-          s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${riffRaffManifest.value.getName}",
-          riffRaffManifest.value)
-        streams.value.log.info("RiffRaff build manifest uploaded")
-        client.putObject(riffRaffUploadArtifactBucket.value,
-          s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${riffRaffArtifact.value.getName}",
-          riffRaffArtifact.value)
-        streams.value.log.info("RiffRaff build artifact    uploaded")
+
+        def upload(
+          bucketSetting: SettingKey[Option[String]], maybeBucket: Option[String],
+          fileTask: TaskKey[File], file: File
+        ): Unit = {
+          maybeBucket match {
+            case Some(bucket) => {
+              client.putObject(
+                bucket,
+                s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${file.getName}",
+                file
+              )
+              streams.value.log.info(s"${fileTask.key.label} uploaded")
+            }
+            case None =>
+              streams.value.log.warn(
+                s"${bucketSetting.key.label} not specified, cannot upload ${fileTask.key.label}"
+              )
+          }
+        }
+
+        upload(
+          riffRaffUploadManifestBucket, riffRaffUploadManifestBucket.value,
+          riffRaffManifest, riffRaffManifest.value
+        )
+        upload(
+          riffRaffUploadArtifactBucket, riffRaffUploadArtifactBucket.value,
+          riffRaffArtifact, riffRaffArtifact.value
+        )
       }
     )
   }
