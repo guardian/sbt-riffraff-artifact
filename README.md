@@ -31,7 +31,7 @@ on how to encrypt these variables.
 Customisation
 -------------
 
-If you follow the above steps the `riffraffArtifact` command will produce an archive called `artifacts.zip` in the 
+If you follow the above steps the `riffRaffArtifact` command will produce an archive called `artifacts.zip` in the 
 `target/riffraff` directory. This will contain a `deploy.json` from the `resourceDirectory` (`conf` for a Play app) in 
 the root and a packages directory with a sub-directory, named using the project name, containing a `tgz` archive and 
 the file with either the extension `.service` (Systemd) or `.conf` (Upstart) and the name of the project found in the projects base 
