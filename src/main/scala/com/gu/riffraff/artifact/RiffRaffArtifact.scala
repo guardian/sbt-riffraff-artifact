@@ -110,7 +110,7 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffUpload := {
         val client = new AmazonS3Client()
-        
+
         def upload(
           bucketSetting: SettingKey[Option[String]], maybeBucket: Option[String],
           fileTask: TaskKey[File], file: File
