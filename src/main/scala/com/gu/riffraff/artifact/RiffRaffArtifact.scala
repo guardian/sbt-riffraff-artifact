@@ -1,6 +1,7 @@
 package com.gu.riffraff.artifact
 
 import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.model.{PutObjectRequest, CannedAccessControlList}
 import com.typesafe.sbt.SbtGit.git
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.joda.time.{DateTimeZone, DateTime}
@@ -116,11 +117,15 @@ object RiffRaffArtifact extends AutoPlugin {
         ): Unit = {
           maybeBucket match {
             case Some(bucket) => {
-              client.putObject(
+            
+              val uploadRequest = new PutObjectRequest(
                 bucket,
                 s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${file.getName}",
-                file
-              )
+                file)
+      
+              uploadRequest.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
+              client.putObject(uploadRequest)
+              
               streams.value.log.info(s"${fileTask.key.label} uploaded")
             }
             case None =>
