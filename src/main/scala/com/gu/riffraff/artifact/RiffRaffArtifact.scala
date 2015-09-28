@@ -1,6 +1,7 @@
 package com.gu.riffraff.artifact
 
 import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.model.{PutObjectRequest, CannedAccessControlList}
 import com.typesafe.sbt.SbtGit.git
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.joda.time.{DateTimeZone, DateTime}
@@ -108,14 +109,23 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffUpload := {
         val client = new AmazonS3Client()
-        client.putObject(riffRaffUploadManifestBucket.value,
+
+        val manifestUpload = new PutObjectRequest(
+          riffRaffUploadManifestBucket.value,
           s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${riffRaffManifest.value.getName}",
           riffRaffManifest.value)
-        streams.value.log.info("RiffRaff build manifest uploaded")
-        client.putObject(riffRaffUploadArtifactBucket.value,
+
+        manifestUpload.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
+        client.putObject(manifestUpload)
+        streams.value.log.info(s"${riffRaffPackageName.value} RiffRaff build manifest uploaded")
+
+        val artifactUpload = new PutObjectRequest(riffRaffUploadArtifactBucket.value,
           s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${riffRaffArtifact.value.getName}",
           riffRaffArtifact.value)
-        streams.value.log.info("RiffRaff build artifact    uploaded")
+
+        artifactUpload.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
+        client.putObject(artifactUpload)
+        streams.value.log.info(s"${riffRaffPackageName.value} RiffRaff build artifact uploaded")
       }
     )
   }
