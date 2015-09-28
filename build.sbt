@@ -1,4 +1,4 @@
-name := "riffraff-artifact"
+name := "sbt-riffraff-artifact"
 organization := "com.gu"
 
 sbtPlugin := true
