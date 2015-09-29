@@ -15,8 +15,8 @@ enablePlugins(RiffRaffArtifact, UniversalPlugin)
 riffRaffPackageType := (packageZipTarball in Universal).value
 
 riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
-riffRaffUploadArtifactBucket := "riffraff-artifact"
-riffRaffUploadManifestBucket := "riffraff-builds"
+riffRaffUploadArtifactBucket := Option("riffraff-artifact")
+riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
 
 to your build.sbt, then run `riffRaffUpload` to build an artifact deployable by
@@ -57,8 +57,8 @@ packageDescription := """Slightly longer description"""
 riffRaffPackageType := (packageBin in Debian).value
 
 riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
-riffRaffUploadArtifactBucket := "riffraff-artifact"
-riffRaffUploadManifestBucket := "riffraff-builds"
+riffRaffUploadArtifactBucket := Option("riffraff-artifact")
+riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
 to your build.sbt. If you prefer bundling your app as an uber-jar, instead include the 
 [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin and add
@@ -69,6 +69,6 @@ enablePlugins(RiffRaffArtifact)
 riffRaffPackageType := assembly.value
 
 riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
-riffRaffUploadArtifactBucket := "riffraff-artifact"
-riffRaffUploadManifestBucket := "riffraff-builds"
+riffRaffUploadArtifactBucket := Option("riffraff-artifact")
+riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
