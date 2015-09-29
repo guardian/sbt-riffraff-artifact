@@ -136,12 +136,12 @@ object RiffRaffArtifact extends AutoPlugin {
         }
 
         upload(
-          riffRaffUploadManifestBucket, riffRaffUploadManifestBucket.value,
-          riffRaffManifest, riffRaffManifest.value
-        )
-        upload(
           riffRaffUploadArtifactBucket, riffRaffUploadArtifactBucket.value,
           riffRaffArtifact, riffRaffArtifact.value
+        )
+        upload(
+          riffRaffUploadManifestBucket, riffRaffUploadManifestBucket.value,
+          riffRaffManifest, riffRaffManifest.value
         )
       }
     )
