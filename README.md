@@ -2,14 +2,14 @@ SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployabl
 ===========================================================================================
 
 Add
-```
+```scala
 addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "0.8.1")
 ```
 
 to your `project/plugins.sbt` and if you want to bundle your app as a `tgz` using 
 [sbt-native-packager](https://github.com/sbt/sbt-native-packager) 
 
-```
+```scala
 enablePlugins(RiffRaffArtifact, UniversalPlugin)
 
 riffRaffPackageType := (packageZipTarball in Universal).value
@@ -45,7 +45,7 @@ packages/example/example.service
 ```
 
 If you want a `deb` rather than a `tgz` built, instead add
-```
+```scala
 enablePlugins(RiffRaffArtifact, JDebPackaging)
 
 import com.typesafe.sbt.packager.archetypes.ServerLoader.Systemd
@@ -64,7 +64,7 @@ riffRaffUploadManifestBucket := Option("riffraff-builds")
 to your build.sbt. If you prefer bundling your app as an uber-jar, instead include the 
 [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin and add
 
-```
+```scala
 enablePlugins(RiffRaffArtifact)
 
 riffRaffPackageType := assembly.value
