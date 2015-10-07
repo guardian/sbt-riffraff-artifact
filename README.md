@@ -14,6 +14,7 @@ enablePlugins(RiffRaffArtifact, UniversalPlugin)
 
 riffRaffPackageType := (packageZipTarball in Universal).value
 
+def env(key: String): Option[String] = Option(System.getenv(key))
 riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
