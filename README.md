@@ -73,3 +73,36 @@ riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
+
+AWS Configuration
+-----------------
+
+In order to upload artifacts and manifest files to the Guardian's RiffRaff buckets, you will need to give your build the appropriate permissions.
+
+1. Make sure your AWS account is in the [list of accounts](https://github.com/guardian/deploy/blob/master/cloudformation/riffraff.template) with permission to grant access to those buckets. If it is not, make a PR or ask @philwills to add it for you.
+
+2. Create an IAM user in your AWS account for your build. Give it a policy that looks something like this:
+
+    ```
+    {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1428934825002",
+            "Effect": "Allow",
+            "Action": [
+                "s3:Put*",
+                "s3:List*"
+            ],
+            "Resource": [
+                "arn:aws:s3::*:riffraff-artifact",
+                "arn:aws:s3::*:riffraff-artifact/*",
+                "arn:aws:s3::*:riffraff-builds",
+                "arn:aws:s3::*:riffraff-builds/*"
+            ]
+        }
+    ]
+}
+    ```
+
+3. Pass the AWS access key and secret key to your build, e.g. as environment variables.
