@@ -120,7 +120,7 @@ object RiffRaffArtifact extends AutoPlugin {
             
               val uploadRequest = new PutObjectRequest(
                 bucket,
-                s"${riffRaffPackageName.value}/${riffRaffBuildIdentifier.value}/${file.getName}",
+                s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}/${file.getName}",
                 file)
       
               uploadRequest.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
