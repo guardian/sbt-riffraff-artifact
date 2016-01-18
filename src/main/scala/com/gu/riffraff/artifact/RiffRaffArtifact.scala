@@ -2,6 +2,8 @@ package com.gu.riffraff.artifact
 
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.{PutObjectRequest, CannedAccessControlList}
+import com.amazonaws.auth.{DefaultAWSCredentialsProviderChain, AWSCredentialsProvider}
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.typesafe.sbt.SbtGit.git
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.joda.time.{DateTimeZone, DateTime}
@@ -26,6 +28,9 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffPackageName = settingKey[String]("Name of the magenta package")
     lazy val riffRaffArtifactPublishPath = settingKey[String]("Path to tell TeamCity to publish the artifact on")
 
+    lazy val riffRaffAwsCredentialsProfile = settingKey[String]("Default aws credentials profile used to upload to S3")
+    lazy val riffRaffCredentialsProvider = settingKey[AWSCredentialsProvider]("Default credentials used to upload to S3")
+
     lazy val riffRaffManifest = taskKey[File]("Creates a file representing a build for RiffRaff to consume")
 
     lazy val riffRaffManifestFile = settingKey[String]("Filename of the build manifest for RiffRaff")
@@ -46,6 +51,12 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffManifestProjectName := name.value,
       riffRaffArtifactPublishPath := ".",
       riffRaffArtifactDirectory := "riffraff",
+
+      riffRaffAwsCredentialsProfile := None,
+
+      riffRaffCredentialsProvider := riffRaffAwsCredentialsProfile.fold(new DefaultAWSCredentialsProvider()){case profile =>
+        new AWSCredentialsProviderChain(new ProfileCredentialsProvider(profile), new DefaultAWSCredentialsProvider())
+      },
 
       riffRaffManifestFile := "build.json",
       riffRaffManifestBuildStartTime := DateTime.now(),
@@ -109,7 +120,7 @@ object RiffRaffArtifact extends AutoPlugin {
       },
 
       riffRaffUpload := {
-        val client = new AmazonS3Client()
+        val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
 
         def upload(
           bucketSetting: SettingKey[Option[String]], maybeBucket: Option[String],
