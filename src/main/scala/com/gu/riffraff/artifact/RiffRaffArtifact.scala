@@ -28,8 +28,8 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffPackageName = settingKey[String]("Name of the magenta package")
     lazy val riffRaffArtifactPublishPath = settingKey[String]("Path to tell TeamCity to publish the artifact on")
 
-    lazy val riffRaffAwsCredentialsProfile = settingKey[String]("Default aws credentials profile used to upload to S3")
-    lazy val riffRaffCredentialsProvider = settingKey[AWSCredentialsProvider]("Default credentials used to upload to S3")
+    lazy val riffRaffAwsCredentialsProfile = settingKey[String]("AWS credentials profile used to upload to S3")
+    lazy val riffRaffCredentialsProvider = settingKey[AWSCredentialsProvider]("AWS Credentials provider used to upload to S3")
 
     lazy val riffRaffManifest = taskKey[File]("Creates a file representing a build for RiffRaff to consume")
 
