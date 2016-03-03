@@ -40,6 +40,8 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffUploadArtifactBucket = settingKey[Option[String]]("Bucket to upload artifacts to")
     lazy val riffRaffUploadManifestBucket = settingKey[Option[String]]("Bucket to upload manifest to")
 
+    lazy val riffRaffNotifyTeamcity = settingKey[Boolean]("Report artifacts to Teamcity if true")
+
     lazy val defaultSettings = Seq(
       riffRaffArtifactFile := "artifacts.zip",
       riffRaffPackageName := name.value,
@@ -57,6 +59,8 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffUploadArtifactBucket := None,
       riffRaffUploadManifestBucket := None,
+
+      riffRaffNotifyTeamcity := false,
 
       riffRaffArtifactResources := Seq(
         // systemd unit
@@ -99,10 +103,12 @@ object RiffRaffArtifact extends AutoPlugin {
 
         createArchive(riffRaffArtifactResources.value, distFile)
 
-        // Tells TeamCity to publish the artifact => leave this println in here
-        // see https://confluence.jetbrains.com/display/TCD9/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-PublishingArtifactswhiletheBuildisStillinProgress
-        // for more info.
-        println(s"##teamcity[publishArtifacts '$distFile => ${riffRaffArtifactPublishPath.value}']")
+        if (riffRaffNotifyTeamcity.value) {
+          // Tells TeamCity to publish the artifact => leave this println in here
+          // see https://confluence.jetbrains.com/display/TCD9/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-PublishingArtifactswhiletheBuildisStillinProgress
+          // for more info.
+          println(s"##teamcity[publishArtifacts '$distFile => ${riffRaffArtifactPublishPath.value}']")
+        }
 
         streams.value.log.info("RiffRaff artifact created")
         distFile
