@@ -1,12 +1,12 @@
 package com.gu.riffraff.artifact
 
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.{PutObjectRequest, CannedAccessControlList}
-import com.amazonaws.auth.{DefaultAWSCredentialsProviderChain, AWSCredentialsProvider}
+import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
+import com.amazonaws.auth.{AWSCredentialsProvider, AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.typesafe.sbt.SbtGit.git
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
-import org.joda.time.{DateTimeZone, DateTime}
+import org.joda.time.{DateTime, DateTimeZone}
 import sbt._
 import sbt.Keys._
 import upickle.default._
@@ -28,7 +28,7 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffPackageName = settingKey[String]("Name of the magenta package")
     lazy val riffRaffArtifactPublishPath = settingKey[String]("Path to tell TeamCity to publish the artifact on")
 
-    lazy val riffRaffAwsCredentialsProfile = settingKey[String]("AWS credentials profile used to upload to S3")
+    lazy val riffRaffAwsCredentialsProfile = settingKey[Option[String]]("AWS credentials profile used to upload to S3")
     lazy val riffRaffCredentialsProvider = settingKey[AWSCredentialsProvider]("AWS Credentials provider used to upload to S3")
 
     lazy val riffRaffManifest = taskKey[File]("Creates a file representing a build for RiffRaff to consume")
@@ -56,9 +56,10 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffAwsCredentialsProfile := None,
 
-      riffRaffCredentialsProvider := riffRaffAwsCredentialsProfile.fold(new DefaultAWSCredentialsProvider()){case profile =>
-        new AWSCredentialsProviderChain(new ProfileCredentialsProvider(profile), new DefaultAWSCredentialsProvider())
-      },
+      riffRaffCredentialsProvider :=
+        riffRaffAwsCredentialsProfile.value.foldLeft[AWSCredentialsProvider](new DefaultAWSCredentialsProviderChain()){case (chain, profile) =>
+          new AWSCredentialsProviderChain(new ProfileCredentialsProvider(profile), chain)
+        },
 
       riffRaffManifestFile := "build.json",
       riffRaffManifestBuildStartTime := DateTime.now(),
