@@ -1,12 +1,22 @@
-SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployable artifacts
+SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployable artifacts 
 ===========================================================================================
+
+[![Build Status](https://travis-ci.org/guardian/sbt-riffraff-artifact.svg?branch=master)](https://travis-ci.org/guardian/sbt-riffraff-artifact)
+
+Installation
+------------
 
 Add
 ```scala
 addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "0.8.3")
 ```
 
-to your `project/plugins.sbt` and if you want to bundle your app as a `tgz` using 
+to your `project/plugins.sbt`
+
+Usage
+-----
+
+If you want to bundle your app as a `tgz` using 
 [sbt-native-packager](https://github.com/sbt/sbt-native-packager) 
 
 ```scala
