@@ -135,16 +135,14 @@ object RiffRaffArtifact extends AutoPlugin {
         ): Unit = {
           maybeBucket match {
             case Some(bucket) => {
-            
-              val uploadRequest = new PutObjectRequest(
-                bucket,
-                s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}/${file.getName}",
-                file)
+
+              val uploadPathKey = s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}/${file.getName}"
+              val uploadRequest = new PutObjectRequest(bucket, uploadPathKey, file)
       
               uploadRequest.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
               client.putObject(uploadRequest)
               
-              streams.value.log.info(s"${fileTask.key.label} uploaded")
+              streams.value.log.info(s"${fileTask.key.label} uploaded to $uploadPathKey")
             }
             case None =>
               streams.value.log.warn(
