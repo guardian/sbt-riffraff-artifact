@@ -116,3 +116,18 @@ In order to upload artifacts and manifest files to the Guardian's RiffRaff bucke
     ```
 
 3. Pass the AWS access key and secret key to your build, e.g. as environment variables.
+
+Releasing
+---------
+
+This project uses [`sbt-release`](https://github.com/sbt/sbt-release) and using [`bintray-sbt`](https://github.com/softprops/bintray-sbt)
+to release to [Bintray](https://bintray.com/guardian/sbt-plugins/sbt-riffraff-artifact). You'll need a Bintray account that's been added to the
+[`guardian` organisation](https://bintray.com/guardian/) and [your Bintray API key](https://bintray.com/profile/edit).
+We also PGP sign our artifacts, so you'll need a PGP key set up for [`sbt-pgp`](http://www.scala-sbt.org/sbt-pgp/) to read.
+
+Once you've got all that, releasing is just:
+
+```
+$ sbt release
+```
+
