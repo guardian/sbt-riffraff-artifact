@@ -3,9 +3,7 @@ organization := "com.gu"
 
 sbtPlugin := true
 
-enablePlugins(GitVersioning)
-
-scalaVersion := "2.10.4"
+scalaVersion := "2.10.6"
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.8.4")
 
@@ -22,3 +20,21 @@ bintrayOrganization := Some("guardian")
 bintrayRepository := "sbt-plugins"
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+
+// Release
+import ReleaseTransformations._
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  releaseStepTask(bintrayRelease),
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)
