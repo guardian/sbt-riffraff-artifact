@@ -1,6 +1,6 @@
 package com.gu.riffraff.artifact
 
-import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
 import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
 import com.amazonaws.auth.{AWSCredentialsProvider, AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
@@ -45,10 +45,9 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffUploadArtifactBucket = settingKey[Option[String]]("Bucket to upload artifacts to")
     lazy val riffRaffUploadManifestBucket = settingKey[Option[String]]("Bucket to upload manifest to")
 
-    lazy val riffRaffNotifyTeamcity = settingKey[Boolean]("Report artifacts to Teamcity if true")
+    lazy val riffRaffNotifyTeamcity = taskKey[Unit]("Task to notify teamcity")
 
-    lazy val defaultSettings = Seq(
-      riffRaffArtifactFile := "artifacts.zip",
+    lazy val coreSettings = Seq(
       riffRaffPackageName := name.value,
       riffRaffManifestProjectName := name.value,
       riffRaffArtifactPublishPath := ".",
@@ -71,8 +70,6 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffUploadArtifactBucket := None,
       riffRaffUploadManifestBucket := None,
-
-      riffRaffNotifyTeamcity := false,
 
       riffRaffArtifactResources := Seq(
         // systemd unit
@@ -107,6 +104,37 @@ object RiffRaffArtifact extends AutoPlugin {
         streams.value.log.info(s"Created RiffRaff manifest: ${manifestFile.getPath}")
 
         manifestFile
+      }
+    )
+
+    lazy val defaultSettings = coreSettings ++ Seq(
+      riffRaffNotifyTeamcity := {
+          riffRaffArtifactResources.value.foreach { case (file, target) =>
+            println(s"##teamcity[publishArtifacts '${file.getName} => ${riffRaffArtifactPublishPath.value}/$target']")
+          }
+      },
+
+      riffRaffUpload := {
+        val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
+
+        val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}"
+
+        upload(
+          riffRaffUploadArtifactBucket, riffRaffUploadArtifactBucket.value,
+          riffRaffArtifactResources, prefix, riffRaffArtifactResources.value
+        )(client, streams.value)
+        upload(
+          riffRaffUploadManifestBucket, riffRaffUploadManifestBucket.value,
+          riffRaffManifest, prefix, riffRaffManifest.value
+        )(client, streams.value)
+      }
+    )
+
+    lazy val legacySettings = coreSettings ++ Seq(
+      riffRaffArtifactFile := "artifacts.zip",
+
+      riffRaffNotifyTeamcity := {
+        println(s"##teamcity[publishArtifacts '${riffRaffArtifact.value} => ${riffRaffArtifactPublishPath.value}']")
       },
 
       riffRaffArtifact := {
@@ -115,13 +143,6 @@ object RiffRaffArtifact extends AutoPlugin {
 
         createArchive(riffRaffArtifactResources.value, distFile)
 
-        if (riffRaffNotifyTeamcity.value) {
-          // Tells TeamCity to publish the artifact => leave this println in here
-          // see https://confluence.jetbrains.com/display/TCD9/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-PublishingArtifactswhiletheBuildisStillinProgress
-          // for more info.
-          println(s"##teamcity[publishArtifacts '$distFile => ${riffRaffArtifactPublishPath.value}']")
-        }
-
         streams.value.log.info("RiffRaff artifact created")
         distFile
       },
@@ -129,40 +150,50 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffUpload := {
         val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
 
-        def upload(
-          bucketSetting: SettingKey[Option[String]], maybeBucket: Option[String],
-          fileTask: TaskKey[File], file: File
-        ): Unit = {
-          maybeBucket match {
-            case Some(bucket) => {
-              val uploadRequest = new PutObjectRequest(
-                bucket,
-                s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}/${file.getName}",
-                file
-              )
-      
-              uploadRequest.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
-              client.putObject(uploadRequest)
-              
-              streams.value.log.info(s"${fileTask.key.label} uploaded to s3://${uploadRequest.getBucketName}/${uploadRequest.getKey}")
-            }
-            case None =>
-              streams.value.log.warn(
-                s"${bucketSetting.key.label} not specified, cannot upload ${fileTask.key.label}"
-              )
-          }
-        }
+        val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}"
 
         upload(
           riffRaffUploadArtifactBucket, riffRaffUploadArtifactBucket.value,
-          riffRaffArtifact, riffRaffArtifact.value
-        )
+          riffRaffArtifact, prefix, riffRaffArtifact.value
+        )(client, streams.value)
         upload(
           riffRaffUploadManifestBucket, riffRaffUploadManifestBucket.value,
-          riffRaffManifest, riffRaffManifest.value
-        )
+          riffRaffManifest, prefix, riffRaffManifest.value
+        )(client, streams.value)
       }
     )
+  }
+
+  def upload(bucketSetting: SettingKey[Option[String]], maybeBucket: Option[String],
+    task: TaskKey[_], bucketPrefix: String, file: File)(client: AmazonS3, streams: Keys.TaskStreams): Unit = {
+    val fileSeq = Seq(file -> file.getName)
+    upload(bucketSetting, maybeBucket, task, bucketPrefix, fileSeq)(client, streams)
+  }
+
+  def upload(
+    bucketSetting: SettingKey[Option[String]], maybeBucket: Option[String],
+    task: TaskKey[_], bucketPrefix: String, filesToUpload: Seq[(File, String)]
+  )(client: AmazonS3, streams: Keys.TaskStreams): Unit = {
+    maybeBucket match {
+      case Some(bucket) => {
+        val uploadRequests = filesToUpload.map{ case (file, name) =>
+          new PutObjectRequest(
+            bucket,
+            s"$bucketPrefix/$name",
+            file
+          ).withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
+        }
+
+        uploadRequests.foreach(client.putObject)
+
+        val friendlyRequests = uploadRequests.map(r => s"s3://${r.getBucketName}/${r.getKey}")
+        streams.log.info(s"${task.key.label} uploaded to ${friendlyRequests.mkString(", ")}")
+      }
+      case None =>
+        streams.log.warn(
+          s"${bucketSetting.key.label} not specified, cannot upload ${task.key.label}"
+        )
+    }
   }
 
   def createArchive(filesToInclude: Seq[(File, String)], archiveToCreate: File): Unit = {
