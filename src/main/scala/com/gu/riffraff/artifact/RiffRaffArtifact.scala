@@ -71,6 +71,7 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffUploadArtifactBucket := None,
       riffRaffUploadManifestBucket := None,
 
+
       riffRaffArtifactResources := Seq(
         // systemd unit
         baseDirectory.value / s"${riffRaffPackageName.value}.service" ->
@@ -87,7 +88,7 @@ object RiffRaffArtifact extends AutoPlugin {
         // deploy instructions
         (resourceDirectory in Compile).value / "deploy.json" -> "deploy.json",
         baseDirectory.value / "deploy.json" -> "deploy.json"
-      ),
+      ).filter { case (file, _) => file.exists },
 
       riffRaffManifest := {
         implicit val dateTimeWriter = Writer[DateTime](dt => Js.Str(dt.withZone(DateTimeZone.UTC).toString))
