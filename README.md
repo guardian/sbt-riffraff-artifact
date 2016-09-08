@@ -89,7 +89,7 @@ AWS Configuration
 
 In order to upload artifacts and manifest files to the Guardian's RiffRaff buckets, you will need to give your build the appropriate permissions.
 
-1. Make sure your AWS account is in the [list of accounts](https://github.com/guardian/deploy/blob/master/cloudformation/riffraff.template) with permission to grant access to those buckets. If it is not, make a PR or ask @philwills to add it for you.
+1. Make sure your AWS account is in the [list of accounts](https://github.com/guardian/deploy-tools-platform/blob/master/cloudformation/riffraff-buckets.template.yaml) with permission to grant access to those buckets. If it is not, make a PR or ask @philwills to add it for you.
 
 2. Create an IAM user in your AWS account for your build. Give it a policy that looks something like this:
 
