@@ -177,7 +177,9 @@ object RiffRaffArtifact extends AutoPlugin {
   )(client: AmazonS3, streams: Keys.TaskStreams): Unit = {
     maybeBucket match {
       case Some(bucket) => {
-        val uploadRequests = filesToUpload.map{ case (file, name) =>
+        val uploadRequests = filesToUpload.filter {
+          case (file, _) => file.isFile
+        }.map{ case (file, name) =>
           new PutObjectRequest(
             bucket,
             s"$bucketPrefix/$name",
