@@ -2,13 +2,14 @@ SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployabl
 ===========================================================================================
 
 [![Build Status](https://travis-ci.org/guardian/sbt-riffraff-artifact.svg?branch=master)](https://travis-ci.org/guardian/sbt-riffraff-artifact)
+[ ![Download](https://api.bintray.com/packages/guardian/sbt-plugins/sbt-riffraff-artifact/images/download.svg) ](https://bintray.com/guardian/sbt-plugins/sbt-riffraff-artifact/_latestVersion)
 
 Installation
 ------------
 
 Add
 ```scala
-addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "0.9.3")
+addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "0.9.4")
 ```
 
 to your `project/plugins.sbt`
