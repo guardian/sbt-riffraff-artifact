@@ -110,9 +110,15 @@ object RiffRaffArtifact extends AutoPlugin {
 
     lazy val defaultSettings = coreSettings ++ Seq(
       riffRaffNotifyTeamcity := {
-          riffRaffArtifactResources.value.foreach { case (file, target) =>
-            println(s"##teamcity[publishArtifacts '$file => ${riffRaffArtifactPublishPath.value}/$target']")
-          }
+        val teamcityPublishDirectory = target.value / riffRaffArtifactDirectory.value / "teamcity"
+        IO.delete(teamcityPublishDirectory)
+
+        riffRaffArtifactResources.value.foreach { case (file, targetName) =>
+          val targetFile = teamcityPublishDirectory / targetName
+          IO.copyFile(file, targetFile)
+        }
+
+        println(s"##teamcity[publishArtifacts '$teamcityPublishDirectory => .']")
       },
 
       riffRaffUpload := {
