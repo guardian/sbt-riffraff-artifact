@@ -47,6 +47,8 @@ object RiffRaffArtifact extends AutoPlugin {
 
     lazy val riffRaffNotifyTeamcity = taskKey[Unit]("Task to notify teamcity")
 
+    lazy val riffRaffUseYamlConfig = settingKey[Boolean]("True if using the new riff-raff.yaml config file rather than the legacy deploy.json")
+
     lazy val coreSettings = Seq(
       riffRaffPackageName := name.value,
       riffRaffManifestProjectName := name.value,
@@ -71,24 +73,29 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffUploadArtifactBucket := None,
       riffRaffUploadManifestBucket := None,
 
+      riffRaffUseYamlConfig := (baseDirectory.value / "riff-raff.yaml").exists || ((resourceDirectory in Compile).value / "riff-raff.yaml").exists,
 
-      riffRaffArtifactResources := Seq(
-        // systemd unit
-        baseDirectory.value / s"${riffRaffPackageName.value}.service" ->
-          s"packages/${riffRaffPackageName.value}/${riffRaffPackageName.value}.service",
+      riffRaffArtifactResources := {
+        val configFileName = if (riffRaffUseYamlConfig.value) "riff-raff.yaml" else "deploy.json"
+        val packagePathPrefix = if (riffRaffUseYamlConfig.value) "" else "packages/"
+        Seq(
+          // systemd unit
+          baseDirectory.value / s"${riffRaffPackageName.value}.service" ->
+            s"$packagePathPrefix${riffRaffPackageName.value}/${riffRaffPackageName.value}.service",
 
-        // upstart script
-        baseDirectory.value / s"${riffRaffPackageName.value}.conf" ->
-          s"packages/${riffRaffPackageName.value}/${riffRaffPackageName.value}.conf",
+          // upstart script
+          baseDirectory.value / s"${riffRaffPackageName.value}.conf" ->
+            s"$packagePathPrefix${riffRaffPackageName.value}/${riffRaffPackageName.value}.conf",
 
-        // compressed redistributable
-        riffRaffPackageType.value ->
-          s"packages/${riffRaffPackageName.value}/${riffRaffPackageType.value.getName}",
+          // compressed redistributable
+          riffRaffPackageType.value ->
+            s"$packagePathPrefix${riffRaffPackageName.value}/${riffRaffPackageType.value.getName}",
 
-        // deploy instructions
-        (resourceDirectory in Compile).value / "deploy.json" -> "deploy.json",
-        baseDirectory.value / "deploy.json" -> "deploy.json"
-      ).filter { case (file, _) => file.exists },
+          // deploy instructions
+          (resourceDirectory in Compile).value / configFileName -> configFileName,
+          baseDirectory.value / configFileName -> configFileName
+        ).filter { case (file, _) => file.exists }
+      },
 
       riffRaffManifest := {
         implicit val dateTimeWriter = Writer[DateTime](dt => Js.Str(dt.withZone(DateTimeZone.UTC).toString))
@@ -147,6 +154,10 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffArtifact := {
         val distFile = target.value / riffRaffArtifactDirectory.value / riffRaffArtifactFile.value
         streams.value.log.info(s"Creating RiffRaff artifact $distFile")
+
+        if (riffRaffUseYamlConfig.value) {
+          throw new IllegalArgumentException("It doesn't make sense to use a riff-raff.yaml configuration file in the legacy artifacts.zip file - please migrate from legacySettings to the defaultSettings")
+        }
 
         createArchive(riffRaffArtifactResources.value, distFile)
 
