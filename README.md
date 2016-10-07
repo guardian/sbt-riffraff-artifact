@@ -40,6 +40,18 @@ can upload to those buckets resolvable by the [DefaultAWSCredentialsProviderChai
 AWS_SECRET_ACCESS_KEY environment variables. Travis has [instructions](http://docs.travis-ci.com/user/environment-variables/#Encrypting-Variables-Using-a-Public-Key) 
 on how to encrypt these variables.
 
+**TeamCity Usage**
+
+Set the riffRaffBuildIdentifier with:
+```scala
+riffRaffBuildIdentifier := env("BUILD_NUMBER").getOrElse("DEV")
+```
+
+TeamCity copies the directory over without git info and so will fail. One fix is to specify the value explicitly:
+```scala
+riffRaffManifestVcsUrl := "git@github.com:guardian/repo-name.git"
+```
+
 Customisation
 -------------
 
