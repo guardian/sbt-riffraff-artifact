@@ -37,25 +37,6 @@ can upload to those buckets resolvable by the [DefaultAWSCredentialsProviderChai
 AWS_SECRET_ACCESS_KEY environment variables. Travis has [instructions](http://docs.travis-ci.com/user/environment-variables/#Encrypting-Variables-Using-a-Public-Key) 
 on how to encrypt these variables.
 
-**TeamCity Usage**
-
-The plugin should support teamcity by default. A standard assembly configuration looks like
-```scala
-enablePlugins(RiffRaffArtifact)
-
-riffRaffPackageType := assembly.value
-riffRaffUploadArtifactBucket := Option("riffraff-artifact")
-riffRaffUploadManifestBucket := Option("riffraff-builds")
-```
-
-And a standard native packager configuration looks like
-```scala
-enablePlugins(RiffRaffArtifact)
-
-riffRaffPackageType := (packageZipTarball in Universal).value
-riffRaffUploadArtifactBucket := Option("riffraff-artifact")
-riffRaffUploadManifestBucket := Option("riffraff-builds")
-```
 
 Customisation
 -------------
