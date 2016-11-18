@@ -33,6 +33,7 @@ object BuildInfo {
   )
 
   def git(baseDirectory: File): Option[BuildInfo] = {
+    def env(propName: String): Option[String] = Option(System.getenv(propName))
     val baseRepo = new FileRepositoryBuilder().findGitDir(baseDirectory)
     baseRepo.setMustExist(true)
 
@@ -42,7 +43,7 @@ object BuildInfo {
       url <- Option(repo.getConfig.getString("remote", "origin", "url"))
       revision = Try(ObjectId.toString(repo.resolve("HEAD"))).toOption.getOrElse("unknown")
     } yield BuildInfo(
-      buildIdentifier = "unknown",
+      buildIdentifier = env("TRAVIS_BUILD_NUMBER") getOrElse "unknown",
       branch = branch,
       revision = revision,
       url = url

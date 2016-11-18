@@ -85,7 +85,6 @@ packageDescription := """Slightly longer description"""
 
 riffRaffPackageType := (packageBin in Debian).value
 
-riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
@@ -97,7 +96,6 @@ enablePlugins(RiffRaffArtifact)
 
 riffRaffPackageType := assembly.value
 
-riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
