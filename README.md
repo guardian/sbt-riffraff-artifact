@@ -24,9 +24,6 @@ If you want to bundle your app as a `tgz` using
 enablePlugins(RiffRaffArtifact, UniversalPlugin)
 
 riffRaffPackageType := (packageZipTarball in Universal).value
-
-def env(key: String): Option[String] = Option(System.getenv(key))
-riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
@@ -42,14 +39,22 @@ on how to encrypt these variables.
 
 **TeamCity Usage**
 
-Set the riffRaffBuildIdentifier with:
+The plugin should support teamcity by default. A standard assembly configuration looks like
 ```scala
-riffRaffBuildIdentifier := env("BUILD_NUMBER").getOrElse("DEV")
+enablePlugins(RiffRaffArtifact)
+
+riffRaffPackageType := assembly.value
+riffRaffUploadArtifactBucket := Option("riffraff-artifact")
+riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
 
-TeamCity copies the directory over without git info and so will fail. One fix is to specify the value explicitly:
+And a standard native packager configuration looks like
 ```scala
-riffRaffManifestVcsUrl := "git@github.com:guardian/repo-name.git"
+enablePlugins(RiffRaffArtifact)
+
+riffRaffPackageType := (packageZipTarball in Universal).value
+riffRaffUploadArtifactBucket := Option("riffraff-artifact")
+riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
 
 Customisation
