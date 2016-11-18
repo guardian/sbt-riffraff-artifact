@@ -4,7 +4,6 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
 import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
 import com.amazonaws.auth.{AWSCredentialsProvider, AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.typesafe.sbt.SbtGit.git
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.joda.time.{DateTime, DateTimeZone}
 import sbt._
@@ -49,6 +48,10 @@ object RiffRaffArtifact extends AutoPlugin {
 
     lazy val riffRaffUseYamlConfig = settingKey[Boolean]("True if using the new riff-raff.yaml config file rather than the legacy deploy.json")
 
+    lazy val riffRaffVcsBaseDirectory = settingKey[File]("The base directory that has been checked out from the VCS")
+
+    lazy val riffRaffBuildInfo = settingKey[BuildInfo]("A case class describing VCS specific properties like revision branch etc.")
+
     lazy val coreSettings = Seq(
       riffRaffPackageName := name.value,
       riffRaffManifestProjectName := name.value,
@@ -64,11 +67,12 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffManifestFile := "build.json",
       riffRaffManifestBuildStartTime := DateTime.now(),
-      riffRaffBuildIdentifier := "unknown",
-      riffRaffManifestRevision := git.gitHeadCommit.value.getOrElse("Unknown"),
-      riffRaffManifestVcsUrl :=
-        new FileRepositoryBuilder().findGitDir(baseDirectory.value).build.getConfig.getString("remote", "origin", "url"),
-      riffRaffManifestBranch := git.gitCurrentBranch.value,
+      riffRaffVcsBaseDirectory := baseDirectory.value,
+      riffRaffBuildInfo := BuildInfo(riffRaffVcsBaseDirectory.value),
+      riffRaffBuildIdentifier := riffRaffBuildInfo.value.buildIdentifier,
+      riffRaffManifestRevision := riffRaffBuildInfo.value.revision,
+      riffRaffManifestVcsUrl := riffRaffBuildInfo.value.url,
+      riffRaffManifestBranch := riffRaffBuildInfo.value.branch,
 
       riffRaffUploadArtifactBucket := None,
       riffRaffUploadManifestBucket := None,
