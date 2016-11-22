@@ -1,12 +1,12 @@
 package com.gu.riffraff.artifact
 
-import java.io.File
+import java.io.{File, FileInputStream, IOException}
+import java.util.Properties
 
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 
 import scala.util.Try
-
 
 case class BuildInfo(
   buildIdentifier: String,
@@ -51,12 +51,27 @@ object BuildInfo {
   }
 
   def teamCity: Option[BuildInfo] = {
-    def prop(propName: String): Option[String] = Option(System.getProperty(propName))
+
+    def prop(propName: String, props: Properties = System.getProperties): Option[String] = Option(props.getProperty(propName))
+    def loadProps(file: String): Option[Properties] = {
+      try {
+        val props = new Properties()
+        props.load(new FileInputStream(file))
+        Some(props)
+      } catch {
+        case e: IOException =>
+          e.printStackTrace()
+          None
+      }
+    }
+
     for {
-      buildIdentifier <- prop("build.number")
-      revision <- prop("build.vcs.number")
-      branch <- prop("vcsroot.branch")
-      url <- prop("vcsroot.url")
+      tcPropFile <- prop("teamcity.configuration.properties.file")
+      tcProps <- loadProps(tcPropFile)
+      buildIdentifier <- prop("build.number", tcProps)
+      revision <- prop("build.vcs.number", tcProps)
+      branch <- prop("teamcity.build.branch", tcProps)
+      url <- prop("vcsroot.url", tcProps)
     } yield BuildInfo(
       buildIdentifier = buildIdentifier,
       branch = branch,
@@ -65,5 +80,5 @@ object BuildInfo {
     )
   }
 
-  def apply(baseDirectory: File): BuildInfo = git(baseDirectory) orElse teamCity getOrElse unknown
+  def apply(baseDirectory: File): BuildInfo = teamCity orElse git(baseDirectory) getOrElse unknown
 }
