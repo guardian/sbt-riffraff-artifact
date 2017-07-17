@@ -145,7 +145,9 @@ object RiffRaffArtifact extends AutoPlugin {
           riffRaffUploadManifestBucket, riffRaffUploadManifestBucket.value,
           riffRaffManifest, prefix, riffRaffManifest.value
         )(client, streams.value)
-      }
+      },
+
+      riffRaffUpload := (riffRaffUpload dependsOn (test in Test)).value
     )
 
     lazy val legacySettings = coreSettings ++ Seq(
@@ -182,7 +184,9 @@ object RiffRaffArtifact extends AutoPlugin {
           riffRaffUploadManifestBucket, riffRaffUploadManifestBucket.value,
           riffRaffManifest, prefix, riffRaffManifest.value
         )(client, streams.value)
-      }
+      },
+
+      riffRaffUpload := (riffRaffUpload dependsOn (test in Test)).value
     )
   }
 
