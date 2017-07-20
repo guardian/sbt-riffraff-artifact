@@ -52,7 +52,12 @@ object BuildInfo {
 
   def teamCity: Option[BuildInfo] = {
 
-    def prop(propName: String, props: Properties = System.getProperties): Option[String] = Option(props.getProperty(propName))
+    def prop(propName: String, props: Properties = System.getProperties): Option[String] = {
+      Option(props.getProperty(propName))
+        .map(_.trim)
+        .filter(_.nonEmpty)
+    }
+
     def loadProps(file: String): Option[Properties] = {
       try {
         val props = new Properties()
