@@ -70,7 +70,7 @@ object BuildInfo {
       tcProps <- loadProps(tcPropFile)
       buildIdentifier <- prop("build.number", tcProps)
       revision <- prop("build.vcs.number", tcProps)
-      branch <- prop("teamcity.build.branch", tcProps)
+      branch <- prop("vcsroot.branch", tcProps).map(ref => ref.split("/").lastOption.getOrElse(ref))
       url <- prop("vcsroot.url", tcProps)
     } yield BuildInfo(
       buildIdentifier = buildIdentifier,
