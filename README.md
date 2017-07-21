@@ -9,7 +9,7 @@ Installation
 
 Add
 ```scala
-addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "0.9.8")
+addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "0.9.9")
 ```
 
 to your `project/plugins.sbt`
