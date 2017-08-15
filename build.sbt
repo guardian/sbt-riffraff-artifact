@@ -3,13 +3,18 @@ organization := "com.gu"
 
 sbtPlugin := true
 
-scalaVersion := "2.10.6"
+scalaVersion := "2.12.2"
+sbtVersion in Global := "1.0.0"
+crossSbtVersions := Seq("1.0.0", "0.13.16")
+scalaCompilerBridgeSource := {
+  val sv = appConfiguration.value.provider.id.version
+  ("org.scala-sbt" % "compiler-interface" % sv % "component").sources
+}
 
 libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.8.1",
   "org.joda" % "joda-convert" % "1.7" % "provided",
-  "com.lihaoyi" %% "upickle" % "0.3.4",
-  "org.scalamacros" %% s"quasiquotes" % "2.0.0" % "provided",
+  "com.lihaoyi" %% "upickle" % "0.4.4",
   "com.amazonaws" % "aws-java-sdk-s3" % "1.10.5.1",
   "org.eclipse.jgit" % "org.eclipse.jgit" % "4.5.0.201609210915-r"
 )
