@@ -38,6 +38,15 @@ AWS_SECRET_ACCESS_KEY environment variables. Travis has [instructions](http://do
 on how to encrypt these variables.
 
 
+Continuous integration
+----------------------
+
+You can configure your continuous integration system (Teamcity and alike) by running the following task:
+```scala
+sbt clean test riffRaffUpload
+```
+
+
 Customisation
 -------------
 
