@@ -3,7 +3,7 @@ organization := "com.gu"
 
 sbtPlugin := true
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.3"
 sbtVersion in Global := "1.0.0"
 crossSbtVersions := Seq("1.0.0", "0.13.16")
 scalaCompilerBridgeSource := {
