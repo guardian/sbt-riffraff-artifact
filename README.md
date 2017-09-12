@@ -9,10 +9,12 @@ Installation
 
 Add
 ```scala
-addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "0.9.9")
+addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "1.0.0")
 ```
 
 to your `project/plugins.sbt`
+
+`sbt-riffraff-artifact` is cross-published for SBT 1.0.0 and SBT 0.13.16
 
 Usage
 -----
