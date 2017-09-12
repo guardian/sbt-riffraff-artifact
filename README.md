@@ -101,8 +101,8 @@ In order to upload artifacts and manifest files to the Guardian's RiffRaff bucke
 
 2. Create an IAM user in your AWS account for your build. Give it a policy that looks something like this:
 
-    ```
-    {
+```
+{
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -121,7 +121,7 @@ In order to upload artifacts and manifest files to the Guardian's RiffRaff bucke
         }
     ]
 }
-    ```
+```
 
 3. Pass the AWS access key and secret key to your build, e.g. as environment variables.
 
