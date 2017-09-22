@@ -1,12 +1,12 @@
 package com.gu.riffraff.artifact
 
 import java.io.File
+import java.nio.file.{FileVisitOption, Files}
 
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
 import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
 import com.amazonaws.auth.{AWSCredentialsProvider, AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.joda.time.{DateTime, DateTimeZone}
 import sbt._
 import sbt.Keys._
@@ -201,19 +201,16 @@ object RiffRaffArtifact extends AutoPlugin {
     )
 
     def staticPackage(packageDirectory: File): Seq[(File, String)] = {
-      def listRegularFiles(file: File): Seq[File] = {
-        if (file.isDirectory) {
-          file.listFiles().toSeq.flatMap(listRegularFiles)
-        } else {
-          Seq(file)
+      import scala.collection.JavaConverters._
+
+      val packagePath = packageDirectory.toPath.toAbsolutePath
+      val files = Files.walk(packagePath, FileVisitOption.FOLLOW_LINKS).iterator.asScala.toSeq
+
+      files
+        .filter(_.toFile.isFile)
+        .map { file =>
+          file.toFile -> packagePath.getParent.relativize(file).toString
         }
-      }
-
-      val dir = packageDirectory.getAbsoluteFile.toPath.getParent
-
-      listRegularFiles(packageDirectory).map { file =>
-        file -> dir.relativize(file.getAbsoluteFile.toPath).toString
-      }
     }
   }
 
