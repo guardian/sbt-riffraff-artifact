@@ -1,10 +1,12 @@
 package com.gu.riffraff.artifact
 
+import java.io.File
+import java.nio.file.{FileVisitOption, Files}
+
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
 import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
 import com.amazonaws.auth.{AWSCredentialsProvider, AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.joda.time.{DateTime, DateTimeZone}
 import sbt._
 import sbt.Keys._
@@ -82,7 +84,20 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffArtifactResources := {
         val configFileName = if (riffRaffUseYamlConfig.value) "riff-raff.yaml" else "deploy.json"
         val packagePathPrefix = if (riffRaffUseYamlConfig.value) "" else "packages/"
-        Seq(
+
+        val rrPackageType = riffRaffPackageType.value
+        val rrPackageName = riffRaffPackageName.value
+
+        val packageFiles: Seq[(File, String)] = if (rrPackageType.isDirectory) {
+          staticPackage(rrPackageType)
+        } else {
+          Seq(
+            rrPackageType ->
+            s"$packagePathPrefix$rrPackageName/${rrPackageType.getName}"
+          )
+        }
+
+        packageFiles ++ Seq(
           // systemd unit
           baseDirectory.value / s"${riffRaffPackageName.value}.service" ->
             s"$packagePathPrefix${riffRaffPackageName.value}/${riffRaffPackageName.value}.service",
@@ -91,14 +106,10 @@ object RiffRaffArtifact extends AutoPlugin {
           baseDirectory.value / s"${riffRaffPackageName.value}.conf" ->
             s"$packagePathPrefix${riffRaffPackageName.value}/${riffRaffPackageName.value}.conf",
 
-          // compressed redistributable
-          riffRaffPackageType.value ->
-            s"$packagePathPrefix${riffRaffPackageName.value}/${riffRaffPackageType.value.getName}",
-
           // deploy instructions
           (resourceDirectory in Compile).value / configFileName -> configFileName,
           baseDirectory.value / configFileName -> configFileName
-        ).filter { case (file, _) => file.exists }
+        ).distinct.filter { case (file, _) => file.exists }
       },
 
       riffRaffManifest := {
@@ -188,6 +199,19 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffUpload := (riffRaffUpload dependsOn (test in Test)).value
     )
+
+    def staticPackage(packageDirectory: File): Seq[(File, String)] = {
+      import scala.collection.JavaConverters._
+
+      val packagePath = packageDirectory.toPath.toAbsolutePath
+      val files = Files.walk(packagePath, FileVisitOption.FOLLOW_LINKS).iterator.asScala.toSeq
+
+      files
+        .filter(_.toFile.isFile)
+        .map { file =>
+          file.toFile -> packagePath.getParent.relativize(file).toString
+        }
+    }
   }
 
   def upload(bucketSetting: SettingKey[Option[String]], maybeBucket: Option[String],
