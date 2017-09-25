@@ -6,7 +6,6 @@ sbtPlugin := true
 scalaVersion := "2.12.3"
 sbtVersion in Global := "1.0.0"
 crossSbtVersions := Seq("1.0.0", "0.13.16")
-releaseCrossBuild := true
 
 scalaCompilerBridgeSource := {
   val sv = appConfiguration.value.provider.id.version
@@ -34,11 +33,11 @@ releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
   runClean,
-  runTest,
+  releaseStepCommandAndRemaining("^ test"),
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  publishArtifacts,
+  releaseStepCommandAndRemaining("^ publishSigned"),
   releaseStepTask(bintrayRelease),
   setNextVersion,
   commitNextVersion,
