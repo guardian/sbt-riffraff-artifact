@@ -43,7 +43,7 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffManifestBranch = taskKey[String]("Branch of the repository the artifact was built from")
 
     lazy val riffRaffAddManifest = taskKey[Unit]("Add a manifest file into the source tree")
-    lazy val riffRaffAddManifestDir = settingKey[String]("Source tree directory in which to add build manifest")
+    lazy val riffRaffAddManifestDir = settingKey[Option[String]]("Source tree directory in which to add build manifest")
 
     lazy val riffRaffUpload = taskKey[Unit]("Upload artifact and manifest to S3 buckets")
     lazy val riffRaffUploadArtifactBucket = settingKey[Option[String]]("Bucket to upload artifacts to")
@@ -82,6 +82,7 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffUploadArtifactBucket := None,
       riffRaffUploadManifestBucket := None,
+      riffRaffAddManifestDir := None,
 
       riffRaffUseYamlConfig := (baseDirectory.value / "riff-raff.yaml").exists || ((resourceDirectory in Compile).value / "riff-raff.yaml").exists,
 
@@ -153,7 +154,7 @@ object RiffRaffArtifact extends AutoPlugin {
 
       // Does not depend on test - you can add a manifest at any time.
       riffRaffAddManifest := {
-        val manifestFile = file(".") / riffRaffAddManifestDir.value / riffRaffManifestFile.value
+        val manifestFile = file(riffRaffAddManifestDir.value.getOrElse(".")) / riffRaffManifestFile.value
         IO.write(manifestFile, manifestContent.value)
         streams.value.log.info(s"Created RiffRaff manifest: ${manifestFile.getPath}")
       },
