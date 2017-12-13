@@ -7,11 +7,8 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
 import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
 import com.amazonaws.auth.{AWSCredentialsProvider, AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import org.joda.time.{DateTime, DateTimeZone}
 import sbt._
 import sbt.Keys._
-import upickle.default._
-import upickle.Js
 
 object RiffRaffArtifact extends AutoPlugin {
 
@@ -36,11 +33,6 @@ object RiffRaffArtifact extends AutoPlugin {
 
     lazy val riffRaffManifestFile = settingKey[String]("Filename of the build manifest for RiffRaff")
     lazy val riffRaffManifestProjectName = settingKey[String]("Project name for the manifest RiffRaff uses to describe a build")
-    lazy val riffRaffBuildIdentifier = settingKey[String]("Identifier for a particular build of a project")
-    lazy val riffRaffManifestBuildStartTime = taskKey[DateTime]("When the build of this artifact started")
-    lazy val riffRaffManifestRevision = taskKey[String]("Revision of the repository the artifact was built from")
-    lazy val riffRaffManifestVcsUrl = taskKey[String]("URL of the repository the artifact was built from")
-    lazy val riffRaffManifestBranch = taskKey[String]("Branch of the repository the artifact was built from")
 
     lazy val riffRaffAddManifest = taskKey[Unit]("Add a manifest file into the source tree")
     lazy val riffRaffAddManifestDir = settingKey[Option[String]]("Source tree directory in which to add build manifest")
@@ -48,7 +40,6 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffUpload = taskKey[Unit]("Upload artifact and manifest to S3 buckets")
     lazy val riffRaffUploadArtifactBucket = settingKey[Option[String]]("Bucket to upload artifacts to")
     lazy val riffRaffUploadManifestBucket = settingKey[Option[String]]("Bucket to upload manifest to")
-    lazy val manifestContent = taskKey[String]("Content of manifest file")
 
     lazy val riffRaffNotifyTeamcity = taskKey[Unit]("Task to notify teamcity")
 
@@ -72,32 +63,14 @@ object RiffRaffArtifact extends AutoPlugin {
         },
 
       riffRaffManifestFile := "build.json",
-      riffRaffManifestBuildStartTime := DateTime.now(),
       riffRaffVcsBaseDirectory := baseDirectory.value,
       riffRaffBuildInfo := BuildInfo(riffRaffVcsBaseDirectory.value),
-      riffRaffBuildIdentifier := riffRaffBuildInfo.value.buildIdentifier,
-      riffRaffManifestRevision := riffRaffBuildInfo.value.revision,
-      riffRaffManifestVcsUrl := riffRaffBuildInfo.value.url,
-      riffRaffManifestBranch := riffRaffBuildInfo.value.branch,
 
       riffRaffUploadArtifactBucket := None,
       riffRaffUploadManifestBucket := None,
       riffRaffAddManifestDir := None,
 
       riffRaffUseYamlConfig := (baseDirectory.value / "riff-raff.yaml").exists || ((resourceDirectory in Compile).value / "riff-raff.yaml").exists,
-
-      manifestContent := {
-        implicit val dateTimeWriter = Writer[DateTime](dt => Js.Str(dt.withZone(DateTimeZone.UTC).toString))
-        val manifestString = write(BuildManifest(
-          riffRaffManifestProjectName.value,
-          riffRaffBuildIdentifier.value,
-          riffRaffManifestBuildStartTime.value,
-          riffRaffManifestRevision.value,
-          riffRaffManifestVcsUrl.value,
-          riffRaffManifestBranch.value
-        ))
-        manifestString
-      },
 
       riffRaffArtifactResources := {
         val configFileName = if (riffRaffUseYamlConfig.value) "riff-raff.yaml" else "deploy.json"
@@ -132,7 +105,7 @@ object RiffRaffArtifact extends AutoPlugin {
 
       riffRaffManifest := {
         val manifestFile = target.value / riffRaffArtifactDirectory.value / riffRaffManifestFile.value
-        IO.write(manifestFile, manifestContent.value)
+        IO.write(manifestFile, BuildManifest(riffRaffManifestProjectName.value, riffRaffBuildInfo.value).writeManifest)
         streams.value.log.info(s"Created RiffRaff manifest: ${manifestFile.getPath}")
 
         manifestFile
@@ -155,14 +128,14 @@ object RiffRaffArtifact extends AutoPlugin {
       // Does not depend on test - you can add a manifest at any time.
       riffRaffAddManifest := {
         val manifestFile = file(riffRaffAddManifestDir.value.getOrElse(".")) / riffRaffManifestFile.value
-        IO.write(manifestFile, manifestContent.value)
+        IO.write(manifestFile, BuildManifest(riffRaffManifestProjectName.value, riffRaffBuildInfo.value).writeManifest)
         streams.value.log.info(s"Created RiffRaff manifest: ${manifestFile.getPath}")
       },
 
       riffRaffUpload := {
         val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
 
-        val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}"
+        val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildInfo.value.buildIdentifier}"
 
         upload(
           riffRaffUploadArtifactBucket, riffRaffUploadArtifactBucket.value,
@@ -201,7 +174,7 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffUpload := {
         val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
 
-        val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}"
+        val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildInfo.value.buildIdentifier}"
 
         upload(
           riffRaffUploadArtifactBucket, riffRaffUploadArtifactBucket.value,
@@ -271,12 +244,5 @@ object RiffRaffArtifact extends AutoPlugin {
     IO.zip(filesToInclude, archiveToCreate)
   }
 
-  case class BuildManifest(
-    projectName: String,
-    buildNumber: String,
-    startTime: DateTime,
-    revision: String,
-    vcsURL: String,
-    branch: String
-  )
+
 }
