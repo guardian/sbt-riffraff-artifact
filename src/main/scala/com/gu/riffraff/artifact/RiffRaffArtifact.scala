@@ -45,8 +45,6 @@ object RiffRaffArtifact extends AutoPlugin {
 
     lazy val riffRaffUseYamlConfig = settingKey[Boolean]("True if using the new riff-raff.yaml config file rather than the legacy deploy.json")
 
-    lazy val riffRaffVcsBaseDirectory = settingKey[File]("The base directory that has been checked out from the VCS")
-
     lazy val riffRaffBuildInfo = settingKey[BuildInfo]("A case class describing VCS specific properties like revision branch etc.")
 
     lazy val coreSettings = Seq(
@@ -63,8 +61,7 @@ object RiffRaffArtifact extends AutoPlugin {
         },
 
       riffRaffManifestFile := "build.json",
-      riffRaffVcsBaseDirectory := baseDirectory.value,
-      riffRaffBuildInfo := BuildInfo(riffRaffVcsBaseDirectory.value),
+      riffRaffBuildInfo := BuildInfo(baseDirectory.value),
 
       riffRaffUploadArtifactBucket := None,
       riffRaffUploadManifestBucket := None,

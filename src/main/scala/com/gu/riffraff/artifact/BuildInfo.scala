@@ -25,15 +25,17 @@ case class BuildInfo(
 
 object BuildInfo {
 
+  val UNKNOWN = "unknown"
+  def env(propName: String): Option[String] = Option(System.getenv(propName))
+
   val unknown = BuildInfo(
-    buildIdentifier = "unknown",
-    branch = "unknown",
-    revision = "unknown",
-    url = "unknown"
+    buildIdentifier = UNKNOWN,
+    branch = UNKNOWN,
+    revision = UNKNOWN,
+    url = UNKNOWN
   )
 
   def git(baseDirectory: File): Option[BuildInfo] = {
-    def env(propName: String): Option[String] = Option(System.getenv(propName))
     val baseRepo = new FileRepositoryBuilder().findGitDir(baseDirectory)
     baseRepo.setMustExist(true)
 
@@ -41,9 +43,42 @@ object BuildInfo {
       repo <- Try(baseRepo.build()).toOption
       branch <- Option(repo.getBranch)
       url <- Option(repo.getConfig.getString("remote", "origin", "url"))
-      revision = Try(ObjectId.toString(repo.resolve("HEAD"))).toOption.getOrElse("unknown")
+      revision = Try(ObjectId.toString(repo.resolve("HEAD"))).toOption.getOrElse(UNKNOWN)
     } yield BuildInfo(
-      buildIdentifier = env("TRAVIS_BUILD_NUMBER") getOrElse "unknown",
+      buildIdentifier = UNKNOWN,
+      branch = branch,
+      revision = revision,
+      url = url
+    )
+  }
+
+  def travis(): Option[BuildInfo] = {
+
+    val baseDirectory = new File(env("TRAVIS_BUILD_DIR").getOrElse("."))
+    val baseRepo = new FileRepositoryBuilder().findGitDir(baseDirectory)
+    baseRepo.setMustExist(true)
+    for {
+      repo <- Try(baseRepo.build()).toOption
+      buildIdentifier <- env("TRAVIS_BUILD_NUMBER")
+      branch <- env("TRAVIS_BRANCH")
+      url <- Option(repo.getConfig.getString("remote", "origin", "url"))
+      revision <- env("TRAVIS_COMMIT")
+    } yield BuildInfo(
+      buildIdentifier = buildIdentifier,
+      branch = branch,
+      revision = revision,
+      url = url
+    )
+  }
+
+  def circleCi(): Option[BuildInfo] = {
+    for {
+      buildIdentifier <- env("CIRCLE_BUILD_NUM")
+      branch <- env("CIRCLE_BRANCH")
+      url <- env("CIRCLE_REPOSITORY_URL")
+      revision <- env("CIRCLE_SHA1")
+    } yield BuildInfo(
+      buildIdentifier = buildIdentifier,
       branch = branch,
       revision = revision,
       url = url
@@ -70,9 +105,8 @@ object BuildInfo {
       }
     }
 
-    def tcBranch(tcProps: Properties): Option[String] = {
-      lazy val fromVcsRoot = prop("vcsroot.branch", tcProps).map(ref => ref.split("/").lastOption.getOrElse(ref))
-      prop("teamcity.build.branch", tcProps).orElse(fromVcsRoot)
+    def vcsRootBranch(tcProps: Properties): Option[String] = {
+      prop("vcsroot.branch", tcProps).map(ref => ref.split("/").lastOption.getOrElse(ref))
     }
 
     for {
@@ -80,7 +114,7 @@ object BuildInfo {
       tcProps <- loadProps(tcPropFile)
       buildIdentifier <- prop("build.number", tcProps)
       revision <- prop("build.vcs.number", tcProps)
-      branch <- tcBranch(tcProps)
+      branch <- prop("teamcity.build.branch", tcProps) orElse vcsRootBranch(tcProps)
       url <- prop("vcsroot.url", tcProps)
     } yield BuildInfo(
       buildIdentifier = buildIdentifier,
@@ -90,5 +124,6 @@ object BuildInfo {
     )
   }
 
-  def apply(baseDirectory: File): BuildInfo = teamCity orElse git(baseDirectory) getOrElse unknown
+  def apply(baseDirectory: File): BuildInfo =
+    teamCity orElse circleCi orElse travis orElse git(baseDirectory) getOrElse unknown
 }
