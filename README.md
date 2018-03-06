@@ -45,9 +45,10 @@ Continuous integration
 
 You can configure your continuous integration system (Teamcity and alike) by running the following task:
 ```scala
-sbt clean test riffRaffUpload
+sbt clean riffRaffUpload
 ```
 
+The `riffRaffUpload` task will execute the tests in your project, and then upload the artifacts and manifest.
 
 Customisation
 -------------
