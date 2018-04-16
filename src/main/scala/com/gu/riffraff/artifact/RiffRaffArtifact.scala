@@ -45,7 +45,8 @@ object RiffRaffArtifact extends AutoPlugin {
     lazy val riffRaffAddManifest = taskKey[Unit]("Add a manifest file into the source tree")
     lazy val riffRaffAddManifestDir = settingKey[Option[String]]("Source tree directory in which to add build manifest")
 
-    lazy val riffRaffUpload = taskKey[Unit]("Upload artifact and manifest to S3 buckets")
+    lazy val riffRaffUpload = taskKey[Unit]("Run tests then upload artifact and manifest to S3 buckets")
+    lazy val riffRaffUploadOnly = taskKey[Unit]("Upload artifact and manifest to S3 buckets")
     lazy val riffRaffUploadArtifactBucket = settingKey[Option[String]]("Bucket to upload artifacts to")
     lazy val riffRaffUploadManifestBucket = settingKey[Option[String]]("Bucket to upload manifest to")
     lazy val manifestContent = taskKey[String]("Content of manifest file")
@@ -159,7 +160,7 @@ object RiffRaffArtifact extends AutoPlugin {
         streams.value.log.info(s"Created RiffRaff manifest: ${manifestFile.getPath}")
       },
 
-      riffRaffUpload := {
+      riffRaffUploadOnly := {
         val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
 
         val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}"
@@ -174,7 +175,7 @@ object RiffRaffArtifact extends AutoPlugin {
         )(client, streams.value)
       },
 
-      riffRaffUpload := (riffRaffUpload dependsOn (test in Test)).value
+      riffRaffUpload := (riffRaffUploadOnly dependsOn (test in Test)).value
     )
 
     lazy val legacySettings = coreSettings ++ Seq(
@@ -198,7 +199,7 @@ object RiffRaffArtifact extends AutoPlugin {
         distFile
       },
 
-      riffRaffUpload := {
+      riffRaffUploadOnly := {
         val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
 
         val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildIdentifier.value}"
@@ -213,7 +214,7 @@ object RiffRaffArtifact extends AutoPlugin {
         )(client, streams.value)
       },
 
-      riffRaffUpload := (riffRaffUpload dependsOn (test in Test)).value
+      riffRaffUpload := (riffRaffUploadOnly dependsOn (test in Test)).value
     )
 
     def staticPackage(packageDirectory: File): Seq[(File, String)] = {
