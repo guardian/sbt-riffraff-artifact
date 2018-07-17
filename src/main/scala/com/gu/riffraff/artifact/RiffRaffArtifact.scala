@@ -1,9 +1,9 @@
 package com.gu.riffraff.artifact
 
 import java.io.File
-import java.nio.file.{FileVisitOption, Files}
+import java.nio.file.{Files, FileVisitOption}
 
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
+import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client, AmazonS3ClientBuilder}
 import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
 import com.amazonaws.auth.{AWSCredentialsProvider, AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
@@ -130,7 +130,7 @@ object RiffRaffArtifact extends AutoPlugin {
       },
 
       riffRaffUpload := {
-        val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
+        val client = AmazonS3ClientBuilder.standard.withCredentials(riffRaffCredentialsProvider.value).build()
 
         val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildInfo.value.buildIdentifier}"
 
@@ -169,7 +169,7 @@ object RiffRaffArtifact extends AutoPlugin {
       },
 
       riffRaffUpload := {
-        val client = new AmazonS3Client(riffRaffCredentialsProvider.value)
+        val client = AmazonS3ClientBuilder.standard.withCredentials(riffRaffCredentialsProvider.value).build()
 
         val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildInfo.value.buildIdentifier}"
 
