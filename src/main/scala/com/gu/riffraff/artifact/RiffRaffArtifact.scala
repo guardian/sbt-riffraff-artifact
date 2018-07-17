@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client, AmazonS3ClientBuilde
 import com.amazonaws.services.s3.model.{CannedAccessControlList, PutObjectRequest}
 import com.amazonaws.auth.{AWSCredentialsProvider, AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.regions.{Region, Regions}
 import sbt._
 import sbt.Keys._
 
@@ -28,6 +29,7 @@ object RiffRaffArtifact extends AutoPlugin {
 
     lazy val riffRaffAwsCredentialsProfile = settingKey[Option[String]]("AWS credentials profile used to upload to S3")
     lazy val riffRaffCredentialsProvider = settingKey[AWSCredentialsProvider]("AWS Credentials provider used to upload to S3")
+    lazy val riffRaffAwsRegion = settingKey[String]("AWS region used to connect to S3")
 
     lazy val riffRaffManifest = taskKey[File]("Creates a file representing a build for RiffRaff to consume")
 
@@ -59,6 +61,8 @@ object RiffRaffArtifact extends AutoPlugin {
         riffRaffAwsCredentialsProfile.value.foldLeft[AWSCredentialsProvider](new DefaultAWSCredentialsProviderChain()){case (chain, profile) =>
           new AWSCredentialsProviderChain(new ProfileCredentialsProvider(profile), chain)
         },
+
+      riffRaffAwsRegion := Option(Regions.getCurrentRegion).map(_.getName).getOrElse(Regions.EU_WEST_1.getName),
 
       riffRaffManifestFile := "build.json",
       riffRaffBuildInfo := BuildInfo(baseDirectory.value),
@@ -130,7 +134,11 @@ object RiffRaffArtifact extends AutoPlugin {
       },
 
       riffRaffUpload := {
-        val client = AmazonS3ClientBuilder.standard.withCredentials(riffRaffCredentialsProvider.value).build()
+        val client = AmazonS3ClientBuilder
+          .standard
+          .withCredentials(riffRaffCredentialsProvider.value)
+          .withRegion(riffRaffAwsRegion.value)
+          .build()
 
         val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildInfo.value.buildIdentifier}"
 
@@ -169,7 +177,11 @@ object RiffRaffArtifact extends AutoPlugin {
       },
 
       riffRaffUpload := {
-        val client = AmazonS3ClientBuilder.standard.withCredentials(riffRaffCredentialsProvider.value).build()
+        val client = AmazonS3ClientBuilder
+          .standard
+          .withCredentials(riffRaffCredentialsProvider.value)
+          .withRegion(riffRaffAwsRegion.value)
+          .build()
 
         val prefix = s"${riffRaffManifestProjectName.value}/${riffRaffBuildInfo.value.buildIdentifier}"
 
