@@ -26,7 +26,7 @@ case class BuildInfo(
 object BuildInfo {
 
   val UNKNOWN = "unknown"
-  def env(propName: String): Option[String] = Option(System.getenv(propName))
+  def env(propName: String): Option[String] = sys.env.get(propName)
 
   val unknown = BuildInfo(
     buildIdentifier = UNKNOWN,
@@ -54,13 +54,22 @@ object BuildInfo {
 
   def travis(): Option[BuildInfo] = {
 
+    // TRAVIS_BRANCH is master when building PRs
+    def getTravisBranch: Option[String] = {
+      env("TRAVIS_PULL_REQUEST") match {
+        case Some("false") => env("TRAVIS_BRANCH").orElse(Some("unknown-branch"))
+        case Some(i) => Some(s"pr/$i")
+        case None => Some("unknown-branch")
+      }
+    }
+
     val baseDirectory = new File(env("TRAVIS_BUILD_DIR").getOrElse("."))
     val baseRepo = new FileRepositoryBuilder().findGitDir(baseDirectory)
     baseRepo.setMustExist(true)
     for {
       repo <- Try(baseRepo.build()).toOption
       buildIdentifier <- env("TRAVIS_BUILD_NUMBER")
-      branch <- env("TRAVIS_BRANCH")
+      branch <- getTravisBranch
       url <- Option(repo.getConfig.getString("remote", "origin", "url"))
       revision <- env("TRAVIS_COMMIT")
     } yield BuildInfo(
