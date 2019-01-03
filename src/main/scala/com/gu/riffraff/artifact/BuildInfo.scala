@@ -119,12 +119,14 @@ object BuildInfo {
     }
 
     for {
-      tcPropFile <- prop("teamcity.configuration.properties.file")
-      tcProps <- loadProps(tcPropFile)
-      buildIdentifier <- prop("build.number", tcProps)
-      revision <- prop("build.vcs.number", tcProps)
-      branch <- prop("teamcity.build.branch", tcProps) orElse vcsRootBranch(tcProps)
-      url <- prop("vcsroot.url", tcProps)
+      tcBuildPropsFile <- env("TEAMCITY_BUILD_PROPERTIES_FILE")
+      tcBuildProps <- loadProps(tcBuildPropsFile)
+      tcConfigPropFile <- prop("teamcity.configuration.properties.file", tcBuildProps)
+      tcConfigProps <- loadProps(tcConfigPropFile)
+      buildIdentifier <- prop("build.number", tcConfigProps)
+      revision <- prop("build.vcs.number", tcConfigProps)
+      branch <- prop("teamcity.build.branch", tcConfigProps) orElse vcsRootBranch(tcConfigProps)
+      url <- prop("vcsroot.url", tcConfigProps)
     } yield BuildInfo(
       buildIdentifier = buildIdentifier,
       branch = branch,
