@@ -123,6 +123,7 @@ object RiffRaffArtifact extends AutoPlugin {
           IO.copyFile(file, targetFile)
         }
 
+        // see https://www.jetbrains.com/help/teamcity/service-messages.html#Publishing+Artifacts+while+the+Build+is+Still+in+Progress
         println(s"##teamcity[publishArtifacts '$teamcityPublishDirectory => .']")
       },
 
@@ -159,6 +160,7 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffArtifactFile := "artifacts.zip",
 
       riffRaffNotifyTeamcity := {
+        // see https://www.jetbrains.com/help/teamcity/service-messages.html#Publishing+Artifacts+while+the+Build+is+Still+in+Progress
         println(s"##teamcity[publishArtifacts '${riffRaffArtifact.value} => ${riffRaffArtifactPublishPath.value}']")
       },
 
