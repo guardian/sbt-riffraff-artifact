@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
 
 fork in Test := false
 
-publishMavenStyle := false
+publishMavenStyle := true
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html"))
 scmInfo := Some(ScmInfo(url("https://github.com/guardian/sbt-riffraff-artifact"), "scm:git@github.com:guardian/sbt-riffraff-artifact"))
