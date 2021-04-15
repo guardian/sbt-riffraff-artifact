@@ -1,9 +1,3 @@
-
-addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
-
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.6")
-
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
-
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.0")
-
+addSbtPlugin("com.github.sbt" % "sbt-release" % "1.0.15")
+addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.7")
