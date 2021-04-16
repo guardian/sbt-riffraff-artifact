@@ -1,15 +1,15 @@
 SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployable artifacts 
 ===========================================================================================
 
-[![Build Status](https://travis-ci.org/guardian/sbt-riffraff-artifact.svg?branch=master)](https://travis-ci.org/guardian/sbt-riffraff-artifact)
-[ ![Download](https://api.bintray.com/packages/guardian/sbt-plugins/sbt-riffraff-artifact/images/download.svg) ](https://bintray.com/guardian/sbt-plugins/sbt-riffraff-artifact/_latestVersion)
+![Build status](https://github.com/guardian/sbt-riffraff-artifact/actions/workflows/ci.yml/badge.svg?branch=master)
+[ ![Download](https://maven-badges.herokuapp.com/maven-central/com.gu/sbt-riffraff-artifact/badge.svg) ](https://search.maven.org/artifact/com.gu/sbt-riffraff-artifact)
 
 Installation
 ------------
 
 Add
 ```scala
-addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "1.1.9")
+addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "1.1.12") // use latest version from above
 ```
 
 to your `project/plugins.sbt`
