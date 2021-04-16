@@ -7,11 +7,6 @@ scalaVersion := "2.12.3"
 sbtVersion in Global := "1.0.0"
 crossSbtVersions := Seq("1.0.0", "0.13.16")
 
-scalaCompilerBridgeSource := {
-  val sv = appConfiguration.value.provider.id.version
-  ("org.scala-sbt" % "compiler-interface" % sv % "component").sources
-}
-
 libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.8.1",
   "org.joda" % "joda-convert" % "1.7" % "provided",
@@ -26,15 +21,17 @@ libraryDependencies ++= Seq(
 
 fork in Test := false
 
-publishMavenStyle := false
-bintrayOrganization := Some("guardian")
-bintrayRepository := "sbt-plugins"
+publishMavenStyle := true
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+scmInfo := Some(ScmInfo(url("https://github.com/guardian/sbt-riffraff-artifact"), "scm:git@github.com:guardian/sbt-riffraff-artifact"))
+homepage := scmInfo.value.map(_.browseUrl)
+developers := List(Developer(id = "guardian", name = "Guardian", email = null, url = url("https://github.com/guardian")))
 
 // Release
 import ReleaseTransformations._
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
+publishTo := sonatypePublishToBundle.value
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
@@ -44,7 +41,7 @@ releaseProcess := Seq[ReleaseStep](
   commitReleaseVersion,
   tagRelease,
   releaseStepCommandAndRemaining("^ publishSigned"),
-  releaseStepTask(bintrayRelease),
+  releaseStepCommand("sonatypeBundleRelease"),
   setNextVersion,
   commitNextVersion,
   pushChanges
