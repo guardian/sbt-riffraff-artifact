@@ -40,6 +40,14 @@
         }
       ]
     },
+    "build": {
+      "name": "build",
+      "steps": [
+        {
+          "exec": "sbt clean compile test"
+        }
+      ]
+    },
     "default": {
       "name": "default",
       "steps": [
