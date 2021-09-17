@@ -11,7 +11,7 @@ libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.8.1",
   "org.joda" % "joda-convert" % "1.7" % "provided",
   "com.lihaoyi" %% "upickle" % "0.4.4",
-  "com.amazonaws" % "aws-java-sdk-s3" % "1.11.368",
+  "com.amazonaws" % "aws-java-sdk-s3" % "1.11.1034",
   "org.eclipse.jgit" % "org.eclipse.jgit" % "5.0.1.201806211838-r",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.11.2", // bump to remove vulnerable version pulled in by AWS
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
