@@ -135,6 +135,26 @@ object BuildInfo {
     )
   }
 
+  def gitHubActions: Option[BuildInfo] = {
+    for {
+      runNumber <- env("GITHUB_RUN_NUMBER")
+      sha <- env("GITHUB_SHA")
+      ref <- env("GITHUB_REF")
+      baseUrl <- env("GITHUB_SERVER_URL")
+      repo <- env("GITHUB_REPOSITORY")
+    } yield BuildInfo(
+      buildIdentifier = runNumber,
+      branch = ref,
+      revision = sha,
+      url = s"$baseUrl/$repo"
+    )
+  }
+
   def apply(baseDirectory: File): BuildInfo =
-    teamCity orElse circleCi orElse travis orElse git(baseDirectory) getOrElse unknown
+    teamCity orElse
+      gitHubActions orElse
+      circleCi orElse
+      travis orElse
+      git(baseDirectory) getOrElse
+      unknown
 }
