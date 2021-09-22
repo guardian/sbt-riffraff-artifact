@@ -139,7 +139,12 @@ object BuildInfo {
     for {
       runNumber <- env("GITHUB_RUN_NUMBER")
       sha <- env("GITHUB_SHA")
-      ref <- env("GITHUB_REF")
+
+      // `GITHUB_HEAD_REF` is only set for pull request events and represents the branch name (e.g. `feature-branch-1`).
+      // `GITHUB_REF` is the branch or tag ref that triggered the workflow (e.g. `refs/heads/feature-branch-1` or `refs/pull/259/merge`).
+      // See https://docs.github.com/en/actions/learn-github-actions/environment-variables
+      ref <- env("GITHUB_HEAD_REF").orElse(env("GITHUB_REF"))
+
       baseUrl <- env("GITHUB_SERVER_URL")
       repo <- env("GITHUB_REPOSITORY")
     } yield BuildInfo(
