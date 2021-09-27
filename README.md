@@ -1,11 +1,9 @@
-SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployable artifacts 
-===========================================================================================
+# SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployable artifacts
 
 ![Build status](https://github.com/guardian/sbt-riffraff-artifact/actions/workflows/ci.yml/badge.svg?branch=master)
 [ ![Download](https://maven-badges.herokuapp.com/maven-central/com.gu/sbt-riffraff-artifact/badge.svg) ](https://search.maven.org/artifact/com.gu/sbt-riffraff-artifact)
 
-Installation
-------------
+## Installation
 
 Add
 ```scala
@@ -16,8 +14,7 @@ to your `project/plugins.sbt`
 
 `sbt-riffraff-artifact` is cross-published for SBT 1.0.0 and SBT 0.13.16
 
-Usage
------
+## Usage
 
 If you want to bundle your app as a `tgz` using 
 [sbt-native-packager](https://github.com/sbt/sbt-native-packager) 
@@ -40,8 +37,7 @@ AWS_SECRET_ACCESS_KEY environment variables. Travis has [instructions](http://do
 on how to encrypt these variables.
 
 
-Continuous integration
-----------------------
+## Continuous integration
 
 You can configure your continuous integration system (Teamcity and alike) by running the following task:
 ```scala
@@ -50,8 +46,42 @@ sbt clean riffRaffUpload
 
 The `riffRaffUpload` task will execute the tests in your project, and then upload the artifacts and manifest.
 
-Customisation
--------------
+### Within GitHub Actions
+
+The `riffRaffUpload` sbt task will upload files to S3. When run in TeamCity, we gain credentials via TeamCity's `InstanceProfile` policy.
+
+To give GitHub Actions permissions to upload to S3 use the [`@guardian/actions-assume-aws-role` Action](https://github.com/guardian/actions-assume-aws-role).
+Ensure you use the Action before the `sbt clean riffRaffUpload`.
+A secret (`GU_RIFF_RAFF_ROLE_ARN`) has been added Guardian GitHub organisation that can be used for the value of `awsRoleToAssume`.
+
+For example:
+```yaml
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v2
+      - uses: guardian/actions-assume-aws-role@v1
+        with:
+          awsRoleToAssume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - run: sbt clean riffRaffUpload
+```
+
+## Customisation
 
 If you follow the above steps the `riffRaffArtifact` command will produce an archive called `artifacts.zip` in the 
 `target/riffraff` directory. This will contain a `deploy.json` from the `resourceDirectory` (`conf` for a Play app) in 
@@ -93,8 +123,7 @@ riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
 ```
 
-AWS Configuration
------------------
+## AWS Configuration
 
 In order to upload artifacts and manifest files to the Guardian's RiffRaff buckets, you will need to give your build the appropriate permissions.
 
@@ -126,8 +155,7 @@ In order to upload artifacts and manifest files to the Guardian's RiffRaff bucke
 
 3. Pass the AWS access key and secret key to your build, e.g. as environment variables.
 
-Releasing
----------
+## Releasing
 
 This project uses [`sbt-release`](https://github.com/sbt/sbt-release) and [`bintray-sbt`](https://github.com/softprops/bintray-sbt)
 to release to [Bintray](https://bintray.com/guardian/sbt-plugins/sbt-riffraff-artifact). You'll need a Bintray account that's been added to the
