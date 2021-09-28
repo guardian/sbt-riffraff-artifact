@@ -67,8 +67,10 @@ object RiffRaffArtifact extends AutoPlugin {
       riffRaffManifestFile := "build.json",
       riffRaffBuildInfo := BuildInfo(baseDirectory.value),
 
-      riffRaffUploadArtifactBucket := None,
-      riffRaffUploadManifestBucket := None,
+      // The following are defaults for the Guardian
+      riffRaffUploadArtifactBucket := Some("riffraff-artifact"),
+      riffRaffUploadManifestBucket := Some("riffraff-builds"),
+
       riffRaffAddManifestDir := None,
 
       riffRaffUseYamlConfig := (baseDirectory.value / "riff-raff.yaml").exists || ((resourceDirectory in Compile).value / "riff-raff.yaml").exists,
