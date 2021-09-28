@@ -82,13 +82,18 @@ jobs:
 ```
 
 #### Migrating Riff-Raff project to GitHub Actions from TeamCity
-Riff-Raff will only continuous deploy builds of the default branch if the latest build number is greater than the previously deployed build number.
+Riff-Raff will only trigger continuous deployment for builds of the default branch if the latest build number is greater than the previously deployed build number.
 
 If you've been running in TeamCity for a while you'll likely have a pretty large build number.
 When moving to GitHub Actions, the build number restarts from 1.
 Therefore, you'll likely witness your project's continuous deployment no longer working.
 
-To solve this, it is easiest to customise the values of `riffRaffManifestProjectName` and `riffRaffPackageName`, creating a new project in Riff-Raff and then add a restriction to the previous project.
+To solve this, it is easiest to customise the values of `riffRaffManifestProjectName` and `riffRaffPackageName`, creating a new project in Riff-Raff. Once this change has been merged, you should also:
+
+ 1. Add a [restriction](https://riffraff.gutools.co.uk/deployment/restrictions/new) which prevents anyone from accidentally deploying the old Riff-Raff project.
+ 2. Update your [Continuous Deployment configuration](https://riffraff.gutools.co.uk/deployment/continuous) to use the new project name. 
+ 3. Update your [Scheduled Deployment configuration](https://riffraff.gutools.co.uk/deployment/schedule) to use the new project name.
+ 4. Pause the TeamCity build configuration - this can be deleted entirely once you are confident that the GitHub Actions pipeline is working
 Be sure to pause the TeamCity project too.
 Whilst this requires some co-ordination with your team, it is a one off process.
 
