@@ -47,49 +47,57 @@ sbt clean riffRaffUpload
 The `riffRaffUpload` task will execute the tests in your project, and then upload the artifacts and manifest.
 
 ### Within GitHub Actions
+To use this plugin within GitHub Actions, GitHub needs credentials to upload to Riff-Raff's S3 buckets.
 
-The `riffRaffUpload` sbt task will upload files to S3. When run in TeamCity, we gain credentials via TeamCity's `InstanceProfile` policy.
+The best way is to use the [provided](./action.yml) [composite action](https://github.blog/changelog/2020-08-07-github-actions-composite-run-steps/),
+which uses [`@guardian/actions-assume-aws-role`](https://github.com/guardian/actions-assume-aws-role).
 
-To give GitHub Actions permissions to upload to S3 use the [`@guardian/actions-assume-aws-role` Action](https://github.com/guardian/actions-assume-aws-role).
-Ensure you use the Action before the `sbt clean riffRaffUpload`.
-A secret (`GU_RIFF_RAFF_ROLE_ARN`) has been added Guardian GitHub organisation that can be used for the value of `awsRoleToAssume`.
-
-For example:
 ```yaml
 name: CI
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
 jobs:
   CI:
     runs-on: ubuntu-latest
+    
+    # Required by @guardian/actions-assume-aws-role
     permissions:
       id-token: write
       contents: read
+    
     steps:
       - uses: actions/checkout@v2
-      - uses: guardian/actions-assume-aws-role@v1
+      - uses: guardian/sbt-riffraff-artifact@main
         with:
-          awsRoleToAssume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-      - run: sbt clean riffRaffUpload
+          # Composite actions do not have direct access to secrets, so we have to explicitly pass it over
+          # See: https://github.com/actions/runner/blob/main/docs/adrs/0549-composite-run-steps.md#secrets
+          # Note: `GU_RIFF_RAFF_ROLE_ARN` is available as an organisation-wide secret
+          riffRaffRoleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
 ```
 
-#### Migrating Riff-Raff project to GitHub Actions from TeamCity
+#### Migrating to GitHub Actions from TeamCity
 Riff-Raff will only trigger continuous deployment for builds of the default branch if the latest build number is greater than the previously deployed build number.
 
 If you've been running in TeamCity for a while you'll likely have a pretty large build number.
 When moving to GitHub Actions, the build number restarts from 1.
 Therefore, you'll likely witness your project's continuous deployment no longer working.
 
-To solve this, it is easiest to customise the values of `riffRaffManifestProjectName` and `riffRaffPackageName`, creating a new project in Riff-Raff. Once this change has been merged, you should also:
+To solve this, set `finalTeamCityBuildNumber`:
 
+```yaml
+- uses: guardian/sbt-riffraff-artifact@main
+  with:
+    riffRaffRoleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+    finalTeamCityBuildNumber: 100
+```
+
+Alternatively, you can customise the values of `riffRaffManifestProjectName` and `riffRaffPackageName`, creating a new project in Riff-Raff.
+
+Once this change has been merged, you should also:
  1. Add a [restriction](https://riffraff.gutools.co.uk/deployment/restrictions/new) which prevents anyone from accidentally deploying the old Riff-Raff project.
  2. Update your [Continuous Deployment configuration](https://riffraff.gutools.co.uk/deployment/continuous) to use the new project name. 
  3. Update your [Scheduled Deployment configuration](https://riffraff.gutools.co.uk/deployment/schedule) to use the new project name.
