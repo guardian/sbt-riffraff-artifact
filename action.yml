@@ -1,0 +1,39 @@
+# A composite GitHub Action, performing CI for `sbt-riffraff-artifact`.
+# See https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
+
+name: CI for sbt-riffraff-artifact
+description: CI for projects using sbt-riffraff-artifact
+inputs:
+  riffRaffRoleArn:
+    description: 'ARN of the role with permission to upload to the Riff-Raff buckets'
+    required: true
+  finalTeamCityBuildNumber:
+    description: 'If migrating from TeamCity, the number of the final build to ensure continuity within Riff-Raff'
+    default: '0'
+    required: false
+  javaVersion:
+    description: 'Which java version to use'
+    default: '8'
+    required: false
+  javaDistribution:
+    description: 'Which java distribution to use'
+    default: 'adopt'
+    required: false
+runs:
+  using: 'composite'
+  steps:
+    - uses: guardian/actions-assume-aws-role@v1
+      with:
+        awsRoleToAssume: ${{ inputs.riffRaffRoleArn }}
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: ${{ inputs.javaVersion }}
+        distribution: ${{ inputs.javaDistribution }}
+    - name: CI for sbt-riffraff-artifact
+      shell: bash
+      env:
+        FINAL_TEAMCITY_BUILD: ${{ inputs.finalTeamCityBuildNumber }}
+      run: |
+        export GITHUB_RUN_NUMBER=$(( $GITHUB_RUN_NUMBER + $FINAL_TEAMCITY_BUILD ))
+        sbt clean compile test riffRaffUpload
