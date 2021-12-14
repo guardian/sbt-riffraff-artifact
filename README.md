@@ -1,7 +1,7 @@
 # SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployable artifacts
 
 ![Build status](https://github.com/guardian/sbt-riffraff-artifact/actions/workflows/ci.yml/badge.svg?branch=master)
-[ ![Download](https://maven-badges.herokuapp.com/maven-central/com.gu/sbt-riffraff-artifact/badge.svg) ](https://search.maven.org/artifact/com.gu/sbt-riffraff-artifact)
+[![sbt-riffraff-artifact Scala version support](https://index.scala-lang.org/guardian/sbt-riffraff-artifact/sbt-riffraff-artifact/latest-by-scala-version.svg?targetType=Sbt)](https://index.scala-lang.org/guardian/sbt-riffraff-artifact/sbt-riffraff-artifact)
 
 ## Installation
 
