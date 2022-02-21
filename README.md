@@ -50,9 +50,9 @@ The `riffRaffUpload` task will execute the tests in your project, and then uploa
 
 The `riffRaffUpload` sbt task will upload files to S3. When run in TeamCity, we gain credentials via TeamCity's `InstanceProfile` policy.
 
-To give GitHub Actions permissions to upload to S3 use the [`@guardian/actions-assume-aws-role` Action](https://github.com/guardian/actions-assume-aws-role).
+To give GitHub Actions permissions to upload to S3 use the [`aws-actions/configure-aws-credentials` Action](https://github.com/aws-actions/configure-aws-credentials).
 Ensure you use the Action before the `sbt clean riffRaffUpload`.
-A secret (`GU_RIFF_RAFF_ROLE_ARN`) has been added Guardian GitHub organisation that can be used for the value of `awsRoleToAssume`.
+A secret (`GU_RIFF_RAFF_ROLE_ARN`) has been added Guardian GitHub organisation that can be used for the value of `role-to-assume`.
 
 For example:
 ```yaml
@@ -70,9 +70,10 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v2
-      - uses: guardian/actions-assume-aws-role@v1
+      - uses: aws-actions/configure-aws-credentials@v1
         with:
-          awsRoleToAssume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          aws-region: eu-west-1
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
