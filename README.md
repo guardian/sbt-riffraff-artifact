@@ -1,6 +1,6 @@
 # SBT plugin for creating [RiffRaff](https://github.com/guardian/deploy) deployable artifacts
 
-![Build status](https://github.com/guardian/sbt-riffraff-artifact/actions/workflows/ci.yml/badge.svg?branch=master)
+![Build status](https://github.com/guardian/sbt-riffraff-artifact/actions/workflows/ci.yml/badge.svg?branch=main)
 [![sbt-riffraff-artifact Scala version support](https://index.scala-lang.org/guardian/sbt-riffraff-artifact/sbt-riffraff-artifact/latest-by-scala-version.svg?targetType=Sbt)](https://index.scala-lang.org/guardian/sbt-riffraff-artifact/sbt-riffraff-artifact)
 
 ## Installation
@@ -144,7 +144,7 @@ riffRaffUploadManifestBucket := Option("riffraff-builds")
 
 In order to upload artifacts and manifest files to the Guardian's RiffRaff buckets, you will need to give your build the appropriate permissions.
 
-1. Make sure your AWS account is in the [list of accounts](https://github.com/guardian/deploy-tools-platform/blob/master/cloudformation/riffraff-buckets.template.yaml) with permission to grant access to those buckets. If it is not, make a PR or ask @philwills to add it for you.
+1. Make sure your AWS account is in the [list of accounts](https://github.com/guardian/deploy-tools-platform/blob/main/cloudformation/riffraff-buckets.template.yaml) with permission to grant access to those buckets. If it is not, make a PR or ask @guardian/developer-experience to add it for you.
 
 2. Create an IAM user in your AWS account for your build. Give it a policy that looks something like this:
 
